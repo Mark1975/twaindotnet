@@ -9,14 +9,14 @@ namespace TwainDotNet.Win32
     {
         public static System.Drawing.Image ParseImage( MemoryTransferData memoryTransferData )
         {
-            ImageInfo twimageinfo = memoryTransferData.ImageInfo;
+            ImageInfo imageinfo = memoryTransferData.ImageInfo;
 
-            if( twimageinfo.BitsPerPixel == 24 )
+            if( imageinfo.BitsPerPixel == 24 )
             {
                 return ParseUncompressedColorImage( memoryTransferData );
             }
 
-            if( twimageinfo.BitsPerPixel == 8 || twimageinfo.BitsPerPixel == 16 )
+            if( imageinfo.BitsPerPixel == 8 || imageinfo.BitsPerPixel == 16 )
             {
                 return ParseUncompressedGrayscaleImage( memoryTransferData );
             }
@@ -26,13 +26,14 @@ namespace TwainDotNet.Win32
 
         private static System.Drawing.Image ParseUncompressedGrayscaleImage( MemoryTransferData memoryTransferData )
         {
-            ImageInfo twimageinfo = memoryTransferData.ImageInfo;
+            ImageInfo imageinfo = memoryTransferData.ImageInfo;
 
             const int iSpaceForHeader = 512;
 
             byte[] tiffHeader = new byte[iSpaceForHeader];
 
-            TiffGrayscaleUncompressed tiffgrayscaleuncompressed = new TiffGrayscaleUncompressed( ( uint )twimageinfo.ImageWidth, ( uint )twimageinfo.ImageLength, ( uint )twimageinfo.XResolution, ( uint )memoryTransferData.Data.Length, ( uint )twimageinfo.BitsPerPixel );
+			byte[] data = memoryTransferData.Data;
+            TiffGrayscaleUncompressed tiffgrayscaleuncompressed = new TiffGrayscaleUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length, ( uint )imageinfo.BitsPerPixel );
 
             // Create memory for the TIFF header...
             IntPtr intptrTiff = Marshal.AllocHGlobal( Marshal.SizeOf( tiffgrayscaleuncompressed ) );
@@ -55,7 +56,7 @@ namespace TwainDotNet.Win32
                         tiffHeader.Length - ( iSpaceForHeader - Marshal.SizeOf( tiffgrayscaleuncompressed ) )
                     );
 
-                    ms.Write( memoryTransferData.Data, 0, memoryTransferData.Data.Length );
+                    ms.Write( data, 0, data.Length );
 
                     return System.Drawing.Image.FromStream( ms );
                 }
@@ -70,14 +71,29 @@ namespace TwainDotNet.Win32
 
         private static System.Drawing.Image ParseUncompressedColorImage( MemoryTransferData memoryTransferData )
         {
-            ImageInfo twimageinfo = memoryTransferData.ImageInfo;
+            ImageInfo imageinfo = memoryTransferData.ImageInfo;
+			ImageMemXfer imageMemXfer = memoryTransferData.ImageMemXfer;
 
             const int iSpaceForHeader = 512;
 
             byte[] tiffHeader = new byte[iSpaceForHeader];
 
-            // Create a TIFF header...
-            TiffColorUncompressed tiffcoloruncompressed = new TiffColorUncompressed( ( uint )twimageinfo.ImageWidth, ( uint )twimageinfo.ImageLength, ( uint )twimageinfo.XResolution, ( uint )memoryTransferData.Data.Length );
+			byte[] data = memoryTransferData.Data;
+			if( imageMemXfer.BytesPerRow != imageMemXfer.Columns * 3 )
+			{
+				// Each row contains padding bytes; but I haven't found a way to inject that information in the Tiff header.
+				// Workaround: remove the padding bytes.
+				using( MemoryStream ms = new MemoryStream() )
+				{
+					for( int row = 0; row < imageinfo.ImageLength; row++)
+					{
+						ms.Write( data, row * (int)imageMemXfer.BytesPerRow, (int)imageMemXfer.Columns * 3 );
+					}
+					data = ms.ToArray();
+				}
+			}
+
+			TiffColorUncompressed tiffcoloruncompressed = new TiffColorUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length );
 
             // Create memory for the TIFF header...
             IntPtr intptrTiff = Marshal.AllocHGlobal( Marshal.SizeOf( tiffcoloruncompressed ) );
@@ -100,7 +116,7 @@ namespace TwainDotNet.Win32
                         tiffHeader.Length - ( iSpaceForHeader - Marshal.SizeOf( tiffcoloruncompressed ) )
                     );
 
-                    ms.Write( memoryTransferData.Data, 0, memoryTransferData.Data.Length );
+                    ms.Write( data, 0, data.Length );
 
                     return System.Drawing.Image.FromStream( ms );
                 }

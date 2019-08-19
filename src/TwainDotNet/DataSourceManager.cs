@@ -189,6 +189,11 @@ namespace TwainDotNet
             Capability c = new Capability( Capabilities.IXferMech, TwainType.Int16, ApplicationId, DataSource.SourceId );
             BasicCapabilityResult cResult = c.GetBasicValue();
             TransferMechanism transferMechanism = ( TransferMechanism )cResult.Int16Value;
+			// Make sure only supported transfer mechanism is selected.
+			if( transferMechanism != TransferMechanism.Memory )
+			{
+				transferMechanism = TransferMechanism.Native;
+			}
 
             PendingXfers pendingTransfer = new PendingXfers();
             TwainResult result;
@@ -347,7 +352,7 @@ namespace TwainDotNet
             {
                 imageMemXfer.Memory.Flags = MemoryFlags.AppOwns | MemoryFlags.Pointer;
                 imageMemXfer.Memory.Length = setupMemXfer.Preferred;
-                imageMemXfer.Memory.TheMem = Kernel32Native.GlobalAlloc( GlobalAllocFlags.MemFixed, ( int )setupMemXfer.Preferred * 2 );
+                imageMemXfer.Memory.TheMem = Kernel32Native.GlobalAlloc( GlobalAllocFlags.MemFixed, ( int )setupMemXfer.Preferred );
 
                 if( imageMemXfer.Memory.TheMem == IntPtr.Zero )
                 {
