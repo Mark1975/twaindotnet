@@ -242,6 +242,23 @@ namespace TwainDotNet
             }
         }
 
+        TwainNative.TransferMechanism _dataTransferMode;
+
+        public TwainNative.TransferMechanism DataTransferMode
+        {
+            get
+            {
+                return _dataTransferMode;
+            }
+            set
+            {
+                if( value != _dataTransferMode )
+                {
+                    _dataTransferMode = value;
+                    OnPropertyChanged( "DataTransferMode" );
+                }
+            }
+        }
 
         #region INotifyPropertyChanged Members
 

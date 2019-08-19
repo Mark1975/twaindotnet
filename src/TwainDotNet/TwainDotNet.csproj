@@ -58,6 +58,7 @@
     <Compile Include="Diagnostics.cs" />
     <Compile Include="FeederEmptyException.cs" />
     <Compile Include="IWindowsMessageHook.cs" />
+    <Compile Include="MemoryTransferData.cs" />
     <Compile Include="ScanningCompleteEventArgs.cs" />
     <Compile Include="PageSettings.cs" />
     <Compile Include="ResolutionSettings.cs" />
@@ -80,9 +81,12 @@
     <Compile Include="TwainNative\Frame.cs" />
     <Compile Include="TwainNative\ImageFileFormat.cs" />
     <Compile Include="TwainNative\ImageLayout.cs" />
+    <Compile Include="TwainNative\ImageMemXfer.cs" />
+    <Compile Include="TwainNative\Memory.cs" />
     <Compile Include="TwainNative\Orientation.cs" />
     <Compile Include="TwainNative\PageType.cs" />
     <Compile Include="TwainNative\PixelType.cs" />
+    <Compile Include="TwainNative\SetupMemXfer.cs" />
     <Compile Include="TwainNative\TransferMechanism.cs" />
     <Compile Include="TwainNative\TwainCapability.cs">
       <SubType>Code</SubType>
@@ -91,6 +95,7 @@
     <Compile Include="Win32\BitmapInfoHeader.cs" />
     <Compile Include="Win32\BitmapRenderer.cs" />
     <Compile Include="Win32\Gdi32Native.cs" />
+    <Compile Include="Win32\ImageParser.cs" />
     <Compile Include="Win32\Kernel32Native.cs" />
     <Compile Include="TwainNative\Language.cs" />
     <Compile Include="TwainNative\Twain32Native.cs" />

@@ -5,3 +5,4 @@ syntax: glob
 [Bb]in
 [Dd]ebug*/
 obj/
+.vs/

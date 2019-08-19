@@ -298,6 +298,22 @@ namespace TwainDotNet
             }
         }
 
+        /// <summary>
+        /// Negotiates the indicator.
+        /// </summary>
+        /// <param name="scanSettings">The scan settings.</param>
+        public void NegotiateDataTransferMode( ScanSettings scanSettings )
+        {
+            try
+            {
+                Capability.SetCapability( Capabilities.Xfermech, ( short )scanSettings.DataTransferMode, _applicationId, SourceId );
+            }
+            catch
+            {
+                // Do nothing if the data source does not support the requested capability
+            }
+        }
+
         public bool Open(ScanSettings settings)
         {
             OpenSource();
@@ -310,8 +326,9 @@ namespace TwainDotNet
             NegotiateTransferCount(settings);
             NegotiateFeeder(settings);
             NegotiateDuplex(settings);
+            NegotiateDataTransferMode( settings );
 
-            if (settings.UseDocumentFeeder == true &&
+            if( settings.UseDocumentFeeder == true &&
                 settings.Page != null)
             {
                 NegotiatePageSize(settings);

@@ -41,6 +41,29 @@ namespace TestAppWpf
                                 BitmapSizeOptions.FromEmptyOptions());
                         Gdi32Native.DeleteObject(hbitmap);
                     }
+
+                    if( args.MemoryTransferData != null )
+                    {
+                        Image image = ImageParser.ParseImage( args.MemoryTransferData );
+
+                        if( image != null )
+                        {
+                            Bitmap bitmap = new Bitmap( image );
+                            using( var ms = new MemoryStream() )
+                            {
+                                bitmap.Save( ms, System.Drawing.Imaging.ImageFormat.Bmp );
+                                ms.Seek( 0, SeekOrigin.Begin );
+
+                                var bitmapImage = new BitmapImage();
+                                bitmapImage.BeginInit();
+                                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                                bitmapImage.StreamSource = ms;
+                                bitmapImage.EndInit();
+
+                                MainImage.Source = bitmapImage;
+                            }
+                        }
+                    }
                 };
                 _twain.ScanningComplete += delegate
                 {
@@ -65,22 +88,23 @@ namespace TestAppWpf
             IsEnabled = false;
 
             _settings = new ScanSettings
-                {
-                    UseDocumentFeeder = UseAdfCheckBox.IsChecked,
-                    ShowTwainUI = UseUICheckBox.IsChecked ?? false,
-                    ShowProgressIndicatorUI = ShowProgressCheckBox.IsChecked,
-                    UseDuplex = UseDuplexCheckBox.IsChecked,
-                    Resolution = (BlackAndWhiteCheckBox.IsChecked ?? false)
+            {
+                UseDocumentFeeder = UseAdfCheckBox.IsChecked,
+                ShowTwainUI = UseUICheckBox.IsChecked ?? false,
+                ShowProgressIndicatorUI = ShowProgressCheckBox.IsChecked,
+                UseDuplex = UseDuplexCheckBox.IsChecked,
+                Resolution = ( BlackAndWhiteCheckBox.IsChecked ?? false )
                                      ? ResolutionSettings.Fax
                                      : ResolutionSettings.ColourPhotocopier,
-                    Area = !(GrabAreaCheckBox.IsChecked ?? false) ? null : AreaSettings,
-                    ShouldTransferAllPages = true,
-                    Rotation = new RotationSettings
-                        {
-                            AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
-                            AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false
-                        }
-                };
+                Area = !( GrabAreaCheckBox.IsChecked ?? false ) ? null : AreaSettings,
+                ShouldTransferAllPages = true,
+                Rotation = new RotationSettings
+                {
+                    AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
+                    AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false
+                },
+                DataTransferMode = MemoryTransferMechanism.IsChecked.GetValueOrDefault() ? TransferMechanism.Memory : TransferMechanism.Native,
+            };
 
             try
             {

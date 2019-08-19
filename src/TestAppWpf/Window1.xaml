@@ -1,7 +1,7 @@
 ﻿<Window x:Class="TestAppWpf.Window1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="TestAppWpf" Height="450" Width="500">
+    Title="TestAppWpf" Height="500" Width="500">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="Auto" />
@@ -48,7 +48,14 @@
       <CheckBox Margin="5" Name="AutoDetectBorderCheckBox">Auto Detect Border</CheckBox>
       <CheckBox Margin="5" Name="AutoRotateCheckBox">Auto Rotate</CheckBox>
 
-      <Separator />
+            <Separator />
+
+            <StackPanel Orientation="Vertical">
+                <RadioButton Margin="5" Name="NativeTransferMechanism" IsChecked="True">Native</RadioButton>
+                <RadioButton Margin="5" Name="MemoryTransferMechanism">Memory</RadioButton>
+            </StackPanel>
+            
+        <Separator />
 
       <Button Margin="5" Click="OnSaveButtonClick">Save</Button>
     </StackPanel>
