@@ -14,7 +14,9 @@ namespace TestAppWpf
 {
     public partial class Window1 : Window
     {
-        private static AreaSettings AreaSettings = new AreaSettings(Units.Centimeters, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
+        //private static AreaSettings AreaSettings = new AreaSettings(Units.Centimeters, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
+        //private static AreaSettings AreaSettings = new AreaSettings( Units.Pixels, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f );
+        private static AreaSettings AreaSettings = new AreaSettings(Units.Inches, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
 
         private Twain _twain;
         private ScanSettings _settings;
@@ -30,7 +32,9 @@ namespace TestAppWpf
                 _twain = new Twain(new WpfWindowMessageHook(this));
                 _twain.TransferImage += delegate(Object sender, TransferImageEventArgs args)
                 {
-                    if (args.Image != null)
+                    MainImage.Source = null;
+
+                    if( args.Image != null)
                     {
                         resultImage = args.Image;
                         IntPtr hbitmap = new Bitmap(args.Image).GetHbitmap();
@@ -64,6 +68,8 @@ namespace TestAppWpf
                             }
                         }
                     }
+
+                    MainImage.InvalidateVisual();
                 };
                 _twain.ScanningComplete += delegate
                 {
@@ -87,15 +93,15 @@ namespace TestAppWpf
         {
             IsEnabled = false;
 
+
             _settings = new ScanSettings
             {
                 UseDocumentFeeder = UseAdfCheckBox.IsChecked,
+                UseAutoFeeder = UseAdfCheckBox.IsChecked,
                 ShowTwainUI = UseUICheckBox.IsChecked ?? false,
                 ShowProgressIndicatorUI = ShowProgressCheckBox.IsChecked,
                 UseDuplex = UseDuplexCheckBox.IsChecked,
-                Resolution = ( BlackAndWhiteCheckBox.IsChecked ?? false )
-                                     ? ResolutionSettings.Fax
-                                     : ResolutionSettings.ColourPhotocopier,
+                Resolution = GetResolutionSettings(),
                 Area = !( GrabAreaCheckBox.IsChecked ?? false ) ? null : AreaSettings,
                 ShouldTransferAllPages = true,
                 Rotation = new RotationSettings
@@ -118,6 +124,24 @@ namespace TestAppWpf
             }
 
             IsEnabled = true;
+        }
+
+        private ResolutionSettings GetResolutionSettings()
+        {
+            if( ColourBlackAndWhite.IsChecked.GetValueOrDefault() )
+            {
+                return ResolutionSettings.Fax;
+            }
+            if( ColourGrayscale.IsChecked.GetValueOrDefault() )
+            {
+                return ResolutionSettings.Photocopier;
+            }
+            if( ColourColour.IsChecked.GetValueOrDefault() )
+            {
+                return ResolutionSettings.ColourPhotocopier;
+            }
+
+            return new ResolutionSettings();
         }
 
         private void OnSaveButtonClick(object sender, RoutedEventArgs e)

@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Capabilities : short
+    public enum Capabilities : ushort
     {
         // all data sources are REQUIRED to support these capabilities
         XferCount = 0x0001,

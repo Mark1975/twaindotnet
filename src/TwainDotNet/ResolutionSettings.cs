@@ -8,12 +8,12 @@ namespace TwainDotNet
 {
     public class ResolutionSettings : INotifyPropertyChanged
     {
-        int? _dpi;
+        float? _dpi;
 
         /// <summary>
         /// The DPI to scan at. Set to null to use the current default setting.
         /// </summary>
-        public int? Dpi
+        public float? Dpi
         {
             get { return _dpi; }
             set
@@ -85,6 +85,8 @@ namespace TwainDotNet
 
     public enum ColourSetting
     {
+        Default,
+
         BlackAndWhite,
 
         GreyScale,

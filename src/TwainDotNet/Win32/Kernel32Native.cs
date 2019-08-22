@@ -18,6 +18,9 @@ namespace TwainDotNet.Win32
 
         [DllImport("kernel32.dll", ExactSpelling = true)]
         internal static extern IntPtr GlobalFree(IntPtr handle);
+
+        [DllImport( "kernel32.dll", ExactSpelling = true )]
+        internal static extern uint GlobalSize( IntPtr hMem );
     }
 
     [Flags]

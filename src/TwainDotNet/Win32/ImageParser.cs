@@ -9,6 +9,26 @@ namespace TwainDotNet.Win32
     {
         public static System.Drawing.Image ParseImage( MemoryTransferData memoryTransferData )
         {
+            if( memoryTransferData == null )
+            {
+                throw new ArgumentNullException( nameof( memoryTransferData ) );
+            }
+
+            if( memoryTransferData.ImageInfo == null )
+            {
+                throw new ArgumentException( "memoryTransferData must contain ImageInfo.", nameof( memoryTransferData ) );
+            }
+
+            if( memoryTransferData.ImageMemXfer == null )
+            {
+                throw new ArgumentException( "memoryTransferData must contain ImageMemXfer.", nameof( memoryTransferData ) );
+            }
+
+            if( memoryTransferData.Data == null || memoryTransferData.Data.Length == 0 )
+            {
+                throw new ArgumentException( "memoryTransferData must contain Data.", nameof( memoryTransferData ) );
+            }
+
             ImageInfo imageinfo = memoryTransferData.ImageInfo;
 
             if( imageinfo.BitsPerPixel == 24 )
@@ -21,18 +41,22 @@ namespace TwainDotNet.Win32
                 return ParseUncompressedGrayscaleImage( memoryTransferData );
             }
 
-            return null;
+            throw new NotSupportedException( $"BitsPerPixel={imageinfo.BitsPerPixel} is not supported." );
         }
 
         private static System.Drawing.Image ParseUncompressedGrayscaleImage( MemoryTransferData memoryTransferData )
         {
             ImageInfo imageinfo = memoryTransferData.ImageInfo;
+            ImageMemXfer imageMemXfer = memoryTransferData.ImageMemXfer;
 
             const int iSpaceForHeader = 512;
 
             byte[] tiffHeader = new byte[iSpaceForHeader];
 
-			byte[] data = memoryTransferData.Data;
+            // Each row contains padding bytes; but I haven't found a way to inject that information in the Tiff header.
+            // Workaround: remove the padding bytes.
+            byte[] data = RemoveRowPadding( memoryTransferData.Data, imageMemXfer.BytesPerRow, imageMemXfer.Columns, imageinfo.BitsPerPixel / 8, imageinfo.ImageLength );
+
             TiffGrayscaleUncompressed tiffgrayscaleuncompressed = new TiffGrayscaleUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length, ( uint )imageinfo.BitsPerPixel );
 
             // Create memory for the TIFF header...
@@ -69,31 +93,37 @@ namespace TwainDotNet.Win32
             }
         }
 
+        private static byte[] RemoveRowPadding( byte[] data, uint bytesPerRow, uint columns, int bytesPerPixel, int imageLength )
+        {
+            if( bytesPerRow == columns * bytesPerPixel )
+            {
+                return data;
+            }
+
+            using( MemoryStream ms = new MemoryStream() )
+            {
+                for( int row = 0; row < imageLength; row++ )
+                {
+                    ms.Write( data, row * ( int )bytesPerRow, ( int )columns * bytesPerPixel );
+                }
+                return ms.ToArray();
+            }
+        }
+
         private static System.Drawing.Image ParseUncompressedColorImage( MemoryTransferData memoryTransferData )
         {
             ImageInfo imageinfo = memoryTransferData.ImageInfo;
-			ImageMemXfer imageMemXfer = memoryTransferData.ImageMemXfer;
+            ImageMemXfer imageMemXfer = memoryTransferData.ImageMemXfer;
 
             const int iSpaceForHeader = 512;
 
             byte[] tiffHeader = new byte[iSpaceForHeader];
 
-			byte[] data = memoryTransferData.Data;
-			if( imageMemXfer.BytesPerRow != imageMemXfer.Columns * 3 )
-			{
-				// Each row contains padding bytes; but I haven't found a way to inject that information in the Tiff header.
-				// Workaround: remove the padding bytes.
-				using( MemoryStream ms = new MemoryStream() )
-				{
-					for( int row = 0; row < imageinfo.ImageLength; row++)
-					{
-						ms.Write( data, row * (int)imageMemXfer.BytesPerRow, (int)imageMemXfer.Columns * 3 );
-					}
-					data = ms.ToArray();
-				}
-			}
+            // Each row contains padding bytes; but I haven't found a way to inject that information in the Tiff header.
+            // Workaround: remove the padding bytes.
+            byte[] data = RemoveRowPadding( memoryTransferData.Data, imageMemXfer.BytesPerRow, imageMemXfer.Columns, imageinfo.BitsPerPixel / 8, imageinfo.ImageLength );
 
-			TiffColorUncompressed tiffcoloruncompressed = new TiffColorUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length );
+            TiffColorUncompressed tiffcoloruncompressed = new TiffColorUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length );
 
             // Create memory for the TIFF header...
             IntPtr intptrTiff = Marshal.AllocHGlobal( Marshal.SizeOf( tiffcoloruncompressed ) );

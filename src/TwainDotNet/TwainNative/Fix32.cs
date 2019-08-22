@@ -16,7 +16,13 @@ namespace TwainDotNet.TwainNative
             var val = (int)(f * 65536.0F);
             this.Whole = Convert.ToInt16(val >> 16);    // most significant 16 bits
             this.Frac = Convert.ToUInt16(val & 0xFFFF); // least
-        }        
+        }
+
+        public Fix32( short whole, ushort frac )
+        {
+            this.Whole = whole;
+            this.Frac = frac;
+        }
 
         public float ToFloat()
         {

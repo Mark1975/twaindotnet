@@ -1,7 +1,7 @@
 ﻿<Window x:Class="TestAppWpf.Window1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="TestAppWpf" Height="500" Width="500">
+    Title="TestAppWpf" Height="600" Width="500">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="Auto" />
@@ -39,8 +39,12 @@
       <CheckBox Margin="5" Name="ShowProgressCheckBox">Show Progress</CheckBox>
 
       <Separator />
-
-      <CheckBox Margin="5" Name="BlackAndWhiteCheckBox">B &amp; W</CheckBox>
+            <StackPanel Orientation="Vertical">
+                <RadioButton Margin="5" Name="ColourScannerDefault" IsChecked="True">Default</RadioButton>
+                <RadioButton Margin="5" Name="ColourBlackAndWhite">B &amp; W</RadioButton>
+                <RadioButton Margin="5" Name="ColourGrayscale">Grayscale</RadioButton>
+                <RadioButton Margin="5" Name="ColourColour">Colours</RadioButton>
+            </StackPanel>
       <CheckBox Margin="5" Name="GrabAreaCheckBox">Grab Area</CheckBox>
 
       <Separator />

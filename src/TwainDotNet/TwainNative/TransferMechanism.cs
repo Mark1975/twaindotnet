@@ -7,7 +7,7 @@ namespace TwainDotNet.TwainNative
     /// <summary>
     /// ICAP_XFERMECH values (Image Transfer)
     /// </summary>
-    public enum TransferMechanism : short
+    public enum TransferMechanism : ushort
     {
         Native = 0,
 

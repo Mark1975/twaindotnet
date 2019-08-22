@@ -19,7 +19,8 @@ namespace TwainDotNet.TwainNative
         Str64 = 0x000a,
         Str128 = 0x000b,
         Str255 = 0x000c,
-        Str1024 = 0x000d,
-        Str512 = 0x000e
+        Str1024 = 0x000d, // depreciated
+        Uni512 = 0x000e, // depreciated
+        Handle = 0x000f,
     }
 }

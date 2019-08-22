@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
 using TwainDotNet.Win32;
 
@@ -14,80 +12,86 @@ namespace TwainDotNet.TwainNative
     ///    TW_HANDLE  hContainer; /* Handle to container of type Dat              */
     /// } TW_CAPABILITY, FAR * pTW_CAPABILITY;
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 2)]
+    [StructLayout( LayoutKind.Sequential, Pack = 2 )]
     public class TwainCapability : IDisposable
     {
         Capabilities _capabilities;
         ContainerType _containerType;
         IntPtr _handle;
-        object _value;
 
-        protected TwainCapability(Capabilities capabilities, ContainerType containerType, object value)
+        public TwainCapability( Capabilities capabilities )
         {
             _capabilities = capabilities;
-            _containerType = containerType;
-            _value = value;
+        }
 
-            _handle = Kernel32Native.GlobalAlloc(GlobalAllocFlags.Handle, Marshal.SizeOf(value));
+        public CapabilityResult ReadValue()
+        {
+            if( _handle == IntPtr.Zero )
+            {
+                throw new TwainException( "No handle available for reading." );
+            }
 
-            IntPtr p = Kernel32Native.GlobalLock(_handle);
-
+            uint size = Kernel32Native.GlobalSize( _handle );
+            IntPtr p = Kernel32Native.GlobalLock( _handle );
             try
             {
-                Marshal.StructureToPtr(value, p, false);
+                switch( _containerType )
+                {
+                    case ContainerType.Array:
+                        return ArrayCapabilityResult.FromPointer( p );
+
+                    case ContainerType.Enum:
+                        return EnumCapabilityResult.FromPointer( p );
+
+                    case ContainerType.One:
+                        return BasicCapabilityResult.FromPointer( p, size );
+
+                    case ContainerType.Range:
+                        return RangeCapabilityResult.FromPointer( p );
+
+                    default:
+                        throw new NotImplementedException();
+                }
             }
             finally
             {
-                Kernel32Native.GlobalUnlock(_handle);
+                Kernel32Native.GlobalUnlock( _handle );
             }
         }
 
-        ~TwainCapability()
+        public void WriteValue( CapabilityOneValue value )
         {
-            Dispose(false);
-        }
+            if( _handle != IntPtr.Zero )
+            {
+                throw new TwainException( "Handle is already assigned." );
+            }
 
-        public void ReadBackValue()
-        {
-            IntPtr p = Kernel32Native.GlobalLock(_handle);
+            _containerType = ContainerType.One;
 
+            _handle = Kernel32Native.GlobalAlloc( GlobalAllocFlags.Handle, 6 );
+            IntPtr p = Kernel32Native.GlobalLock( _handle );
             try
             {
-                Marshal.PtrToStructure(p, _value);
+                Marshal.WriteInt16( p, 0, ( short )value.TwainType );
+                Marshal.WriteInt32( p, 2, value.Value );
             }
             finally
             {
-                Kernel32Native.GlobalUnlock(_handle);
+                Kernel32Native.GlobalUnlock( _handle );
             }
-        }
-
-        public static TwainCapability From<TValue>(Capabilities capabilities, TValue value)
-        {
-            ContainerType containerType;
-            Type structType = typeof(TValue);
-
-            if (structType == typeof(CapabilityOneValue))
-            {
-                containerType = ContainerType.One;
-            }
-            else
-            {
-                throw new NotSupportedException("Unsupported type: " + structType);
-            }
-
-            return new TwainCapability(capabilities, containerType, value);
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            Dispose( true );
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose( bool disposing )
         {
-            if (_handle != IntPtr.Zero)
+            if( _handle != IntPtr.Zero )
             {
-                Kernel32Native.GlobalFree(_handle);
+                Kernel32Native.GlobalFree( _handle );
+                _handle = IntPtr.Zero;
             }
         }
     }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Units
+    public enum Units : ushort
     {
         Inches = 0,
 

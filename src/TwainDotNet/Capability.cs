@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using TwainDotNet.TwainNative;
 using log4net;
 
@@ -11,132 +9,135 @@ namespace TwainDotNet
         /// <summary>
         /// The logger for this class.
         /// </summary>
-        static ILog log = LogManager.GetLogger(typeof(Capability));
+        static ILog log = LogManager.GetLogger( typeof( Capability ) );
 
         Identity _applicationId;
         Identity _sourceId;
         Capabilities _capability;
-        TwainType _twainType;
 
-        public Capability(Capabilities capability, TwainType twainType, Identity applicationId, Identity sourceId)
+        public Capability( Capabilities capability, Identity applicationId, Identity sourceId )
         {
             _capability = capability;
             _applicationId = applicationId;
             _sourceId = sourceId;
-            _twainType = twainType;
         }
 
         public BasicCapabilityResult GetBasicValue()
         {
-            var oneValue = new CapabilityOneValue(_twainType, 0);
-            var twainCapability = TwainCapability.From(_capability, oneValue);
-
-            var result = Twain32Native.DsCapability(
-                    _applicationId,
-                    _sourceId,
-                    DataGroup.Control,
-                    DataArgumentType.Capability,
-                    Message.Get,
-                    twainCapability);
-
-            if (result != TwainResult.Success)
+            CapabilityResult result = GetValueInternal( Message.Get );
+            if( result is BasicCapabilityResult basicCapabilityResult1 )
             {
-                var conditionCode = GetStatus();
-
-                log.Debug(string.Format("Failed to get capability:{0} reason: {1}", 
-                    _capability, conditionCode));
-
-                return new BasicCapabilityResult()
-                {
-                    ConditionCode = conditionCode,
-                    ErrorCode = result
-                };
+                return basicCapabilityResult1;
             }
 
-            twainCapability.ReadBackValue();
-
-            return new BasicCapabilityResult()
+            if( result is EnumCapabilityResult enumCapabilityResult )
             {
-                RawBasicValue = oneValue.Value
-            };
+                result = GetValueInternal( Message.GetCurrent );
+                if( result is BasicCapabilityResult basicCapabilityResult2 )
+                {
+                    return basicCapabilityResult2;
+                }
+            }
+
+            throw new InvalidOperationException( "Unsupported basic value." );
+        }
+
+        public CapabilityResult GetValue()
+        {
+            return GetValueInternal( Message.Get );
+        }
+
+        private CapabilityResult GetValueInternal( Message message )
+        {
+            using( TwainCapability twainCapability = new TwainCapability( _capability ) )
+            {
+                var result = Twain32Native.DsCapability(
+                        _applicationId,
+                        _sourceId,
+                        DataGroup.Control,
+                        DataArgumentType.Capability,
+                        message,
+                        twainCapability );
+
+                if( result != TwainResult.Success )
+                {
+                    var conditionCode = GetStatus();
+
+                    log.Debug( string.Format( "Failed to get capability:{0} reason: {1}",
+                        _capability, conditionCode ) );
+
+                    throw new TwainException( string.Format( "Unsupported capability {0} ({1}).", _capability, message ), result, conditionCode );
+                }
+
+                return twainCapability.ReadValue();
+            }
         }
 
         protected ConditionCode GetStatus()
         {
-            return DataSourceManager.GetConditionCode(_applicationId, _sourceId);
+            return DataSourceManager.GetConditionCode( _applicationId, _sourceId );
         }
 
-        public void SetValue(short value)
+        protected void SetValue( TwainType twainType, int rawValue )
         {
-            SetValue<short>(value);
-        }
+            log.Debug( string.Format( "Attempting to set capabilities:{0}, value:{1}, type:{1}",
+                _capability, rawValue, twainType ) );
 
-        protected void SetValue<T>(T value)
-        {
-            log.Debug(string.Format("Attempting to set capabilities:{0}, value:{1}, type:{1}",
-                _capability, value, _twainType));
-
-            int rawValue = Convert.ToInt32(value);
-            var oneValue = new CapabilityOneValue(_twainType, rawValue);
-            var twainCapability = TwainCapability.From(_capability, oneValue);
-
-            TwainResult result = Twain32Native.DsCapability(
-                    _applicationId,
-                    _sourceId,
-                    DataGroup.Control,
-                    DataArgumentType.Capability,
-                    Message.Set,
-                    twainCapability);
-
-            if (result != TwainResult.Success)
+            var oneValue = new CapabilityOneValue( twainType, rawValue );
+            TwainResult result;
+            using( var twainCapability = new TwainCapability( _capability ) )
             {
-                log.Debug(string.Format("Failed to set capabilities:{0}, value:{1}, type:{1}, result:{2}",
-                    _capability, value, _twainType, result));
+                twainCapability.WriteValue( oneValue );
+                result = Twain32Native.DsCapability(
+                        _applicationId,
+                        _sourceId,
+                        DataGroup.Control,
+                        DataArgumentType.Capability,
+                        Message.Set,
+                        twainCapability );
+            }
 
-                if (result == TwainResult.Failure)
+            if( result != TwainResult.Success )
+            {
+                log.Debug( string.Format( "Failed to set capabilities:{0}, value:{1}, type:{1}, result:{2}",
+                    _capability, rawValue, twainType, result ) );
+
+                if( result == TwainResult.Failure )
                 {
                     var conditionCode = GetStatus();
 
-                    log.Error(string.Format("Failed to set capabilites:{0} reason: {1}",
-                        _capability, conditionCode));
+                    log.Error( string.Format( "Failed to set capabilites:{0} reason: {1}",
+                        _capability, conditionCode ) );
 
-                    throw new TwainException("Failed to set capability.", result, conditionCode);
+                    throw new TwainException( "Failed to set capability.", result, conditionCode );
                 }
-                else if (result == TwainResult.CheckStatus)
+                else if( result == TwainResult.CheckStatus )
                 {
-                    log.Debug("Value changed but not to requested value");
+                    log.Debug( "Value changed but not to requested value" );
                 }
                 else
                 {
-                    throw new TwainException("Failed to set capability.", result);
+                    throw new TwainException( "Failed to set capability.", result );
                 }
             }
             else
             {
-                log.Debug("Set capabilities successfully");
+                log.Debug( "Set capabilities successfully" );
             }
         }
 
-        public static short SetCapability(Capabilities capability, short value, Identity applicationId, 
-            Identity sourceId)
+        public static int SetCapability( Capabilities capability, int rawValue, TwainType twainType, Identity applicationId,
+            Identity sourceId )
         {
-            return (short)SetBasicCapability(capability, value, TwainType.Int16, applicationId, sourceId);
-        }
-
-        public static int SetBasicCapability(Capabilities capability, int rawValue, TwainType twainType, Identity applicationId,
-            Identity sourceId)
-        {
-            var c = new Capability(capability, twainType, applicationId, sourceId);
+            var c = new Capability( capability, applicationId, sourceId );
             var capResult = c.GetBasicValue();
 
-            // Check that the device supports the capability
-            if (capResult.ConditionCode != ConditionCode.Success)
+            if( twainType != capResult.TwainType )
             {
-                throw new TwainException(string.Format("Unsupported capability {0}", capability),
-                    capResult.ErrorCode, capResult.ConditionCode);
+                throw new TwainException( string.Format( "Capability {0} TwainType mismatch. Expected: {1}; Actual: {2}", capability, twainType, capResult.TwainType ) );
             }
 
-            if (capResult.RawBasicValue == rawValue)
+            if( capResult.RawBasicValue == rawValue )
             {
                 // Value is already set
                 return rawValue;
@@ -147,73 +148,52 @@ namespace TwainDotNet
 
             //if (value in set of available values)
             //{
-            c.SetValue(rawValue);
+            c.SetValue( twainType, rawValue );
             //}
 
             // Verify that the new values have been accepted by the Source.
             capResult = c.GetBasicValue();
 
             // Check that the device supports the capability
-            if (capResult.ConditionCode != ConditionCode.Success)
+            if( capResult.RawBasicValue != rawValue )
             {
-                throw new TwainException(string.Format("Unexpected failure verifying capability {0}", capability),
-                    capResult.ErrorCode, capResult.ConditionCode);
+                log.Info( string.Format( "Unable to set specified value for capability {0}. Current value={1}; Requested value={2}", capability, capResult.RawBasicValue, rawValue ) );
             }
 
             return capResult.RawBasicValue;
         }
 
-        public static void SetCapability(Capabilities capability, bool value, Identity applicationId,
-            Identity sourceId)
+        public static void SetCapability( Capabilities capability, bool value, Identity applicationId,
+            Identity sourceId )
         {
-            var c = new Capability(capability, TwainType.Bool, applicationId, sourceId);
-            var capResult = c.GetBasicValue();
-
-            // Check that the device supports the capability
-            if (capResult.ConditionCode != ConditionCode.Success)
-            {
-                throw new TwainException(string.Format("Unsupported capability {0}", capability),
-                    capResult.ErrorCode, capResult.ConditionCode);
-            }
-
-            if (capResult.BoolValue == value)
-            {
-                // Value is already set
-                return;
-            }
-
-            c.SetValue(value);
-
-            // Verify that the new values have been accepted by the Source.
-            capResult = c.GetBasicValue();
-
-            // Check that the device supports the capability
-            if (capResult.ConditionCode != ConditionCode.Success)
-            {
-                throw new TwainException(string.Format("Unexpected failure verifying capability {0}", capability),
-                    capResult.ErrorCode, capResult.ConditionCode);
-            }
-            else if (capResult.BoolValue != value)
-            {
-                throw new TwainException(string.Format("Failed to set value for capability {0}", capability),
-                    capResult.ErrorCode, capResult.ConditionCode);
-            }
+            SetCapability( capability, value ? 1 : 0, TwainType.Bool, applicationId, sourceId );
         }
 
-        public static bool GetBoolCapability(Capabilities capability, Identity applicationId,
-            Identity sourceId)
+        public static void SetCapability( Capabilities capability, Fix32 fix32, Identity applicationId,
+            Identity sourceId )
         {
-            var c = new Capability(capability, TwainType.Int16, applicationId, sourceId);
+            byte[] rawBytes = new byte[4];
+            byte[] bWhole = BitConverter.GetBytes( fix32.Whole );
+            byte[] bFrac = BitConverter.GetBytes( fix32.Frac );
+            Array.Copy( bWhole, rawBytes, 2 );
+            Array.Copy( bFrac, 0, rawBytes, 2, 2 );
+            SetCapability( capability, BitConverter.ToInt32( rawBytes, 0 ), TwainType.Fix32, applicationId, sourceId );
+        }
+
+        public static bool GetBoolCapability( Capabilities capability, Identity applicationId,
+            Identity sourceId )
+        {
+            var c = new Capability( capability, applicationId, sourceId );
             var capResult = c.GetBasicValue();
 
-            // Check that the device supports the capability
-            if (capResult.ConditionCode != ConditionCode.Success)
-            {
-                throw new TwainException(string.Format("Unsupported capability {0}", capability),
-                    capResult.ErrorCode, capResult.ConditionCode);
-            }
-
             return capResult.BoolValue;
-        }       
+        }
+
+        public static CapabilityResult GetCapability( Capabilities capability, Identity applicationId,
+            Identity sourceId )
+        {
+            var c = new Capability( capability, applicationId, sourceId );
+            return c.GetValue();
+        }
     }
 }
