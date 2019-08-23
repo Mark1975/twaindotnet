@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum PixelType : short
+    public enum PixelType : ushort
     {
         BlackAndWhite = 0,
         Grey = 1,

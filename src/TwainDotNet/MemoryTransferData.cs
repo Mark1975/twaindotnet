@@ -9,10 +9,20 @@ namespace TwainDotNet
             get; set;
         }
 
+		public Units Units
+		{
+			get; set;
+		}
+
         public ImageInfo ImageInfo
         {
             get; set;
         }
+
+		public ImageLayout ImageLayout
+		{
+			get; set;
+		}
 
         public ImageMemXfer ImageMemXfer
         {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel;
+using TwainDotNet.TwainNative;
 
 namespace TwainDotNet
 {
@@ -260,9 +261,44 @@ namespace TwainDotNet
             }
         }
 
-        #region INotifyPropertyChanged Members
+		private Units _units;
+		public Units Units
+		{
+			get
+			{
+				return _units;
+			}
+			set
+			{
+				_units = value;
+				OnPropertyChanged( "Units" );
+			}
+		}
 
-        protected void OnPropertyChanged(string propertyName)
+		bool _debugCapabilities;
+
+		/// <summary>
+		/// Indicates whether the source capabilities should be debugged.
+		/// </summary>
+		public bool DebugCapabilities
+		{
+			get
+			{
+				return _debugCapabilities;
+			}
+			set
+			{
+				if( value != _debugCapabilities )
+				{
+					_debugCapabilities = value;
+					OnPropertyChanged( "DebugCapabilities" );
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged Members
+
+		protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }

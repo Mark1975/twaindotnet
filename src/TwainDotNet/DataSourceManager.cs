@@ -145,7 +145,8 @@ namespace TwainDotNet
             switch( _eventMessage.Message )
             {
                 case Message.XFerReady:
-                    Exception exception = null;
+					log.Debug( $"Event {_eventMessage.Message} received." );
+					Exception exception = null;
                     try
                     {
                         TransferPictures();
@@ -160,7 +161,8 @@ namespace TwainDotNet
                 case Message.CloseDS:
                 case Message.CloseDSOK:
                 case Message.CloseDSReq:
-                    CloseDsAndCompleteScanning( null );
+					log.Debug( $"Event {_eventMessage.Message} received. Closing DataSource." );
+					CloseDsAndCompleteScanning( null );
                     break;
 
                 case Message.DeviceEvent:
@@ -192,77 +194,43 @@ namespace TwainDotNet
                 transferMechanism = TransferMechanism.Native;
             }
 
-            PendingXfers pendingTransfer = new PendingXfers();
+			log.Debug( $"Initiating transfer with transfermechanism: {transferMechanism}" );
+
             TwainResult result;
             try
             {
                 do
                 {
-                    pendingTransfer.Count = 0;
                     IntPtr hbitmap = IntPtr.Zero;
                     MemoryTransferData memoryTransferData = null;
                     try
                     {
-                        // Get the image info
-                        ImageInfo imageInfo = new ImageInfo();
-                        result = Twain32Native.DsImageInfo(
-                            ApplicationId,
-                            DataSource.SourceId,
-                            DataGroup.Image,
-                            DataArgumentType.ImageInfo,
-                            Message.Get,
-                            imageInfo );
-
-                        if( result != TwainResult.Success )
-                        {
-                            return;
-                        }
-
                         switch( transferMechanism )
                         {
                             case TransferMechanism.Native:
-                                // Transfer the image from the device
-                                result = Twain32Native.DsImageTransfer(
-                                    ApplicationId,
-                                    DataSource.SourceId,
-                                    DataGroup.Image,
-                                    DataArgumentType.ImageNativeXfer,
-                                    Message.Get,
-                                    ref hbitmap );
-
-                                switch( result )
-                                {
-                                    case TwainResult.XferDone:
-                                        DataSource.State = 7;
-                                        break;
-                                    case TwainResult.Cancel:
-                                        DataSource.State = 7;
-                                        return;
-                                    default:
-                                        // Source remains in state 6.
-                                        ConditionCode conditionCode = DataSourceManager.GetConditionCode( ApplicationId, DataSource.SourceId );
-                                        throw new TwainException( $"ImageNativeXfer failed. {result}, {conditionCode}.", result, conditionCode );
-                                }
+								result = PerformNativeTransfer( ref hbitmap );
                                 break;
 
                             case TransferMechanism.Memory:
-                                memoryTransferData = PerformMemoryTransfer( imageInfo, ref result );
-                                if( result != TwainResult.XferDone )
-                                {
-                                    return;
-                                }
+                                result = PerformMemoryTransfer( ref memoryTransferData );
                                 break;
 
                             default:
                                 throw new NotSupportedException( $"Transfermode {transferMechanism} is not supported." );
                         }
-                    }
-                    finally
+
+						if( result != TwainResult.XferDone )
+						{
+							return;
+						}
+					}
+					finally
                     {
                         // End pending transfers
                         if( DataSource.State == 7 )
                         {
-                            result = Twain32Native.DsPendingTransfer(
+							PendingXfers pendingTransfer = new PendingXfers();
+							result = Twain32Native.DsPendingTransfer(
                                 ApplicationId,
                                 DataSource.SourceId,
                                 DataGroup.Control,
@@ -270,19 +238,24 @@ namespace TwainDotNet
                                 Message.EndXfer,
                                 pendingTransfer );
 
-                            if( result == TwainResult.Success )
+                            if( result != TwainResult.Success )
                             {
-                                DataSource.State = 6;
-                                if( pendingTransfer.Count == 0 )
-                                {
-                                    DataSource.State = 5;
-                                }
-                            }
-                        }
-                    }
+								ConditionCode conditionCode = DataSourceManager.GetConditionCode( ApplicationId, DataSource.SourceId );
+								throw new TwainException( $"PendingXfers EndXfer {result}: {conditionCode}.", result, conditionCode );
+							}
 
+							DataSource.State = 6;
+							if( pendingTransfer.Count == 0 )
+							{
+								DataSource.State = 5;
+							}
 
-                    switch( transferMechanism )
+							log.Debug( $"EndXfer State: {DataSource.State}." );
+						}
+					}
+
+					TransferImageEventArgs args = null;
+					switch( transferMechanism )
                     {
                         case TransferMechanism.Native:
                             if( hbitmap == IntPtr.Zero )
@@ -293,36 +266,45 @@ namespace TwainDotNet
                             {
                                 using( var renderer = new BitmapRenderer( hbitmap ) )
                                 {
-                                    TransferImageEventArgs args = new TransferImageEventArgs( renderer.RenderToBitmap(), pendingTransfer.Count != 0 );
-                                    TransferImage( this, args );
-                                    if( !args.ContinueScanning )
-                                        return;
-                                }
+                                    args = new TransferImageEventArgs( renderer.RenderToBitmap(), DataSource.State == 6 );
+								}
                             }
                             break;
-                        case TransferMechanism.Memory:
+
+						case TransferMechanism.Memory:
                             if( memoryTransferData == null )
                             {
                                 log.Warn( "Transfer complete but memory transfer data is still null." );
                             }
                             else
                             {
-                                TransferImageEventArgs args = new TransferImageEventArgs( memoryTransferData, pendingTransfer.Count != 0 );
-                                TransferImage( this, args );
-                                if( !args.ContinueScanning )
-                                    return;
-                            }
+                                args = new TransferImageEventArgs( memoryTransferData, DataSource.State == 6 );
+							}
                             break;
                     }
-                }
-                while( DataSource.State == 6 );
+
+					if( args != null )
+					{
+						TransferImage( this, args );
+						if( !args.ContinueScanning )
+						{
+							if( DataSource.State == 6 )
+							{
+								log.Info( "Transfer ended bij user." );
+							}
+							return;
+						}
+					}
+				}
+				while( DataSource.State == 6 );
             }
             finally
             {
-                if( DataSource.State == 6 )
+                if( DataSource.State >= 6 )
                 {
-                    // Reset any pending transfers
-                    result = Twain32Native.DsPendingTransfer(
+					// Reset any pending transfers
+					PendingXfers pendingTransfer = new PendingXfers();
+					result = Twain32Native.DsPendingTransfer(
                         ApplicationId,
                         DataSource.SourceId,
                         DataGroup.Control,
@@ -330,17 +312,67 @@ namespace TwainDotNet
                         Message.Reset,
                         pendingTransfer );
 
-                    if( result == TwainResult.Success )
+                    if( result != TwainResult.Success )
                     {
-                        DataSource.State = 5;
-                    }
-                }
-            }
+						ConditionCode conditionCode = DataSourceManager.GetConditionCode( ApplicationId, DataSource.SourceId );
+						throw new TwainException( $"PendingXfers Reset {result}: {conditionCode}.", result, conditionCode );
+					}
+					DataSource.State = 5;
+				}
+			}
         }
 
-        private MemoryTransferData PerformMemoryTransfer( ImageInfo imageInfo, ref TwainResult result )
+		private TwainResult PerformNativeTransfer( ref IntPtr hbitmap )
+		{
+			// Transfer the image from the device
+			TwainResult result = Twain32Native.DsImageTransfer(
+				ApplicationId,
+				DataSource.SourceId,
+				DataGroup.Image,
+				DataArgumentType.ImageNativeXfer,
+				Message.Get,
+				ref hbitmap );
+
+			switch( result )
+			{
+				case TwainResult.XferDone:
+					DataSource.State = 7;
+					break;
+				case TwainResult.Cancel:
+					DataSource.State = 7;
+					log.Warn( "Transfer cancelled." );
+					break;
+				default:
+					// Source remains in state 6.
+					ConditionCode conditionCode = DataSourceManager.GetConditionCode( ApplicationId, DataSource.SourceId );
+					throw new TwainException( $"ImageNativeXfer Get {result}: {conditionCode}.", result, conditionCode );
+			}
+			return result;
+		}
+
+		private TwainResult PerformMemoryTransfer( ref MemoryTransferData memoryTransferData )
         {
-            /*
+			memoryTransferData = null;
+
+			BasicCapabilityResult unitsCapabilityResult = (BasicCapabilityResult)Capability.GetCapability( Capabilities.IUnits, Message.GetCurrent, ApplicationId, DataSource.SourceId );
+			Units units = ( Units )unitsCapabilityResult.UInt16Value;
+
+			// Get the image info
+			ImageInfo imageInfo = new ImageInfo();
+			TwainResult result = Twain32Native.DsImageInfo(
+				ApplicationId,
+				DataSource.SourceId,
+				DataGroup.Image,
+				DataArgumentType.ImageInfo,
+				Message.Get,
+				imageInfo );
+
+			if( result != TwainResult.Success )
+			{
+				ConditionCode conditionCode = GetConditionCode( ApplicationId, DataSource.SourceId );
+				throw new TwainException( $"ImageInfo Get {result}: {conditionCode}.", result, conditionCode );
+			}
+
             ImageLayout imageLayout = new ImageLayout();
             result = Twain32Native.DsImageLayout(
                                     ApplicationId,
@@ -352,13 +384,12 @@ namespace TwainDotNet
 
             if( result != TwainResult.Success )
             {
-                DataSource.Close();
-                return null;
+				ConditionCode conditionCode = GetConditionCode( ApplicationId, DataSource.SourceId );
+				throw new TwainException( $"ImageLayout Get {result}: {conditionCode}.", result, conditionCode );
             }
-            */
 
-            // Setup incremental Memory XFer                                        
-            SetupMemXfer setupMemXfer = new SetupMemXfer();
+			// Setup incremental Memory XFer                                        
+			SetupMemXfer setupMemXfer = new SetupMemXfer();
             result = Twain32Native.DsSetupMemXfer(
                 ApplicationId,
                 DataSource.SourceId,
@@ -370,7 +401,8 @@ namespace TwainDotNet
 
             if( result != TwainResult.Success )
             {
-                return null;
+				ConditionCode conditionCode = GetConditionCode( ApplicationId, DataSource.SourceId );
+				throw new TwainException( $"SetupMemXfer Get {result}: {conditionCode}.", result, conditionCode );
             }
 
             // allocate the preferred buffer size                    
@@ -412,26 +444,29 @@ namespace TwainDotNet
 
                             case TwainResult.Cancel:
                                 DataSource.State = 7;
-                                break;
+								log.Warn( "Transfer cancelled." );
+								break;
 
                             default:
                                 ConditionCode conditionCode = GetConditionCode( ApplicationId, DataSource.SourceId );
-                                throw new TwainException( $"ImageNativeXfer failed. {result}, {conditionCode}", result, conditionCode );
+                                throw new TwainException( $"ImageMemXfer Get {result}: {conditionCode}.", result, conditionCode );
                         }
 
                     } while( result == TwainResult.Success );
 
-                    if( result != TwainResult.XferDone )
+                    if( result == TwainResult.XferDone )
                     {
-                        return null;
-                    }
+						memoryTransferData = new MemoryTransferData
+						{
+							Data = ms.ToArray(),
+							Units = units,
+							ImageInfo = imageInfo,
+							ImageLayout = imageLayout,
+							ImageMemXfer = imageMemXfer,
+						};
+					}
 
-                    return new MemoryTransferData
-                    {
-                        Data = ms.ToArray(),
-                        ImageInfo = imageInfo,
-                        ImageMemXfer = imageMemXfer,
-                    };
+					return result;
                 }
             }
             finally

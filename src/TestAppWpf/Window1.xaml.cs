@@ -14,9 +14,7 @@ namespace TestAppWpf
 {
     public partial class Window1 : Window
     {
-        //private static AreaSettings AreaSettings = new AreaSettings(Units.Centimeters, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
-        //private static AreaSettings AreaSettings = new AreaSettings( Units.Pixels, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f );
-        private static AreaSettings AreaSettings = new AreaSettings(Units.Inches, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
+        private static AreaSettings AreaSettings = new AreaSettings(0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
 
         private Twain _twain;
         private ScanSettings _settings;
@@ -71,9 +69,13 @@ namespace TestAppWpf
 
                     MainImage.InvalidateVisual();
                 };
-                _twain.ScanningComplete += delegate
+                _twain.ScanningComplete += delegate(Object sender, ScanningCompleteEventArgs args)
                 {
-                    IsEnabled = true;
+					if( args.Exception != null )
+					{
+						MessageBox.Show( args.Exception.Message );
+					}
+					IsEnabled = true;
                 };
 
                 var sourceList = _twain.SourceNames;
@@ -102,6 +104,7 @@ namespace TestAppWpf
                 ShowProgressIndicatorUI = ShowProgressCheckBox.IsChecked,
                 UseDuplex = UseDuplexCheckBox.IsChecked,
                 Resolution = GetResolutionSettings(),
+				Units = Units.Inches,
                 Area = !( GrabAreaCheckBox.IsChecked ?? false ) ? null : AreaSettings,
                 ShouldTransferAllPages = true,
                 Rotation = new RotationSettings
@@ -110,6 +113,7 @@ namespace TestAppWpf
                     AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false
                 },
                 DataTransferMode = MemoryTransferMechanism.IsChecked.GetValueOrDefault() ? TransferMechanism.Memory : TransferMechanism.Native,
+				DebugCapabilities = true,
             };
 
             try

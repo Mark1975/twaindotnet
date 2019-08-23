@@ -29,7 +29,18 @@ namespace TwainDotNet
             return BitConverter.ToUInt16( this.RawBytes, index * dataSize );
         }
 
-        protected Fix32 GetFix32Item( int index )
+		protected short GetInt16Item( int index )
+		{
+			if( this.RawBytes == null )
+			{
+				throw new InvalidOperationException();
+			}
+
+			int dataSize = GetDataSize( this.TwainType );
+			return BitConverter.ToInt16( this.RawBytes, index * dataSize );
+		}
+
+		protected Fix32 GetFix32Item( int index )
         {
             if( this.RawBytes == null )
             {
@@ -108,7 +119,15 @@ namespace TwainDotNet
 
         public int Int32Value { get { return RawBasicValue; } }
 
-        public string StringValue
+		public Fix32 Fix32Value
+		{
+			get
+			{
+				return new Fix32( RawBasicValue );
+			}
+		}
+
+		public string StringValue
         {
             get; set;
         }
@@ -135,7 +154,23 @@ namespace TwainDotNet
             }
             return result;
         }
-    }
+
+		public override string ToString()
+		{
+			string value;
+			switch( this.TwainType )
+			{
+				case TwainType.Fix32:
+					value = this.Fix32Value.ToString();
+					break;
+
+				default:
+					value = this.RawBasicValue.ToString();
+					break;
+			}
+			return $"{TwainType} {value}";
+		}
+	}
 
     public class EnumCapabilityResult : CapabilityResult
     {
@@ -177,9 +212,36 @@ namespace TwainDotNet
         {
             return this.GetItems( this.ItemCount, this.GetFix32Item );
         }
-    }
 
-    public class ArrayCapabilityResult : CapabilityResult
+		public override string ToString()
+		{
+			string values = "";
+			for( int i = 0; i < ItemCount; i++ )
+			{
+				if( i > 0 )
+				{
+					values += ", ";
+				}
+
+				switch( this.TwainType )
+				{
+					case TwainType.UInt16:
+						values += this.GetUInt16Item( i ).ToString();
+						break;
+					case TwainType.Int16:
+						values += this.GetInt16Item( i ).ToString();
+						break;
+					case TwainType.Fix32:
+						values += this.GetFix32Item( i ).ToString();
+						break;
+
+				}
+			}
+			return $"{TwainType} ItemCount: {ItemCount} CurrentIndex: {CurrentIndex} DefaultIndex: {DefaultIndex} Values: {values}";
+		}
+	}
+
+	public class ArrayCapabilityResult : CapabilityResult
     {
         public int ItemCount
         {
@@ -250,5 +312,28 @@ namespace TwainDotNet
             result.CurrentValue = BitConverter.ToUInt32( rawBytes, 18 );
             return result;
         }
-    }
+
+		public override string ToString()
+		{
+			string minValue = this.MinValue.ToString();
+			string maxValue = this.MaxValue.ToString();
+			string stepSize = this.StepSize.ToString();
+			string defaultValue = this.DefaultValue.ToString();
+			string currentValue = this.CurrentValue.ToString();
+
+				switch( this.TwainType )
+				{
+					case TwainType.Fix32:
+						minValue = new Fix32( this.MinValue ).ToString();
+						maxValue = new Fix32( this.MaxValue ).ToString();
+						stepSize = new Fix32( this.StepSize ).ToString();
+						defaultValue = new Fix32( this.DefaultValue ).ToString();
+						currentValue = new Fix32( this.CurrentValue ).ToString();
+					break;
+
+				}
+
+			return $"{TwainType} MinValue: {minValue} MaxValue: {maxValue} StepSize: {stepSize} DefaultValue: {defaultValue} CurrentValue: {currentValue}";
+		}
+	}
 }

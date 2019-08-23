@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using TwainDotNet.TwainNative;
@@ -7,7 +8,9 @@ namespace TwainDotNet.Win32
 {
     public static class ImageParser
     {
-        public static System.Drawing.Image ParseImage( MemoryTransferData memoryTransferData )
+		static ILog log = LogManager.GetLogger( typeof( ImageParser ) );
+
+		public static System.Drawing.Image ParseImage( MemoryTransferData memoryTransferData )
         {
             if( memoryTransferData == null )
             {
@@ -19,7 +22,12 @@ namespace TwainDotNet.Win32
                 throw new ArgumentException( "memoryTransferData must contain ImageInfo.", nameof( memoryTransferData ) );
             }
 
-            if( memoryTransferData.ImageMemXfer == null )
+			if( memoryTransferData.ImageLayout == null )
+			{
+				throw new ArgumentException( "memoryTransferData must contain ImageLayout.", nameof( memoryTransferData ) );
+			}
+
+			if( memoryTransferData.ImageMemXfer == null )
             {
                 throw new ArgumentException( "memoryTransferData must contain ImageMemXfer.", nameof( memoryTransferData ) );
             }
@@ -29,9 +37,14 @@ namespace TwainDotNet.Win32
                 throw new ArgumentException( "memoryTransferData must contain Data.", nameof( memoryTransferData ) );
             }
 
-            ImageInfo imageinfo = memoryTransferData.ImageInfo;
+			ImageInfo imageinfo = memoryTransferData.ImageInfo;
 
-            if( imageinfo.BitsPerPixel == 24 )
+			log.Debug( $"units {memoryTransferData.Units}" );
+			log.Debug( imageinfo.ToString() );
+			log.Debug( memoryTransferData.ImageLayout.ToString() );
+			log.Debug( memoryTransferData.ImageMemXfer.ToString() );
+
+			if( imageinfo.BitsPerPixel == 24 )
             {
                 return ParseUncompressedColorImage( memoryTransferData );
             }
@@ -57,7 +70,7 @@ namespace TwainDotNet.Win32
             // Workaround: remove the padding bytes.
             byte[] data = RemoveRowPadding( memoryTransferData.Data, imageMemXfer.BytesPerRow, imageMemXfer.Columns, imageinfo.BitsPerPixel / 8, imageinfo.ImageLength );
 
-            TiffGrayscaleUncompressed tiffgrayscaleuncompressed = new TiffGrayscaleUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length, ( uint )imageinfo.BitsPerPixel );
+            TiffGrayscaleUncompressed tiffgrayscaleuncompressed = new TiffGrayscaleUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution.ToFloat(), ( uint )data.Length, ( uint )imageinfo.BitsPerPixel );
 
             // Create memory for the TIFF header...
             IntPtr intptrTiff = Marshal.AllocHGlobal( Marshal.SizeOf( tiffgrayscaleuncompressed ) );
@@ -123,7 +136,7 @@ namespace TwainDotNet.Win32
             // Workaround: remove the padding bytes.
             byte[] data = RemoveRowPadding( memoryTransferData.Data, imageMemXfer.BytesPerRow, imageMemXfer.Columns, imageinfo.BitsPerPixel / 8, imageinfo.ImageLength );
 
-            TiffColorUncompressed tiffcoloruncompressed = new TiffColorUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution, ( uint )data.Length );
+            TiffColorUncompressed tiffcoloruncompressed = new TiffColorUncompressed( ( uint )imageinfo.ImageWidth, ( uint )imageinfo.ImageLength, ( uint )imageinfo.XResolution.ToFloat(), ( uint )data.Length );
 
             // Create memory for the TIFF header...
             IntPtr intptrTiff = Marshal.AllocHGlobal( Marshal.SizeOf( tiffcoloruncompressed ) );

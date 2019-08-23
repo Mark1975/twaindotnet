@@ -8,8 +8,8 @@ namespace TwainDotNet.TwainNative
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
     public class ImageInfo
     {
-        public int XResolution;
-        public int YResolution;
+        public Fix32 XResolution;
+        public Fix32 YResolution;
         public int ImageWidth;
         public int ImageLength;
         public short SamplesPerPixel;
@@ -18,7 +18,23 @@ namespace TwainDotNet.TwainNative
         public short[] BitsPerSample;
         public short BitsPerPixel;
         public short Planar;
-        public short PixelType;
+        public PixelType PixelType;
         public Compression Compression;
-    }
+
+		public override string ToString()
+		{
+			return string.Format(
+				"ImageInfo xres:{0} yres:{1} w:{2} h:{3} spp:{4} bps:{5} bpp:{6} planar:{7} pixelType:{8} compression:{9}",
+				XResolution.ToFloat(),
+				YResolution.ToFloat(),
+				ImageWidth,
+				ImageLength,
+				SamplesPerPixel,
+				BitsPerSample,
+				BitsPerPixel,
+				Planar,
+				PixelType,
+				Compression );
+		}
+	}
 }

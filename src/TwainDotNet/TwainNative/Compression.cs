@@ -4,7 +4,7 @@ namespace TwainDotNet.TwainNative
     /// <summary>
     /// Twain spec ICAP_COMPRESSION values.
     /// </summary>
-    public enum Compression : short
+    public enum Compression : ushort
     {
         None = 0,
         PackBits = 1,

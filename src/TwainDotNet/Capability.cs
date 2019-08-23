@@ -39,7 +39,16 @@ namespace TwainDotNet
                 }
             }
 
-            throw new InvalidOperationException( "Unsupported basic value." );
+			if( result is RangeCapabilityResult rangeCapabilityResult )
+			{
+				result = GetValueInternal( Message.GetCurrent );
+				if( result is BasicCapabilityResult basicCapabilityResult2 )
+				{
+					return basicCapabilityResult2;
+				}
+			}
+
+			throw new InvalidOperationException( "Unsupported basic value." );
         }
 
         public CapabilityResult GetValue()
@@ -192,8 +201,14 @@ namespace TwainDotNet
         public static CapabilityResult GetCapability( Capabilities capability, Identity applicationId,
             Identity sourceId )
         {
-            var c = new Capability( capability, applicationId, sourceId );
-            return c.GetValue();
+			return GetCapability( capability, Message.Get, applicationId, sourceId );
         }
-    }
+
+		public static CapabilityResult GetCapability( Capabilities capability, Message message, Identity applicationId,
+		Identity sourceId )
+		{
+			var c = new Capability( capability, applicationId, sourceId );
+			return c.GetValueInternal( message );
+		}
+	}
 }

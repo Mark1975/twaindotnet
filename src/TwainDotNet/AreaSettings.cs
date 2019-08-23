@@ -1,21 +1,9 @@
 using System.ComponentModel;
-using TwainDotNet.TwainNative;
 
 namespace TwainDotNet
 {
     public class AreaSettings : INotifyPropertyChanged
     {
-        private Units _units;
-        public Units Units
-        {
-            get { return _units; }
-            set
-            {
-                _units = value;
-                OnPropertyChanged("Units");
-            }
-        }
-
         private float _top;
         public float Top
         {
@@ -60,9 +48,8 @@ namespace TwainDotNet
             }
         }
 
-        public AreaSettings(Units units, float top, float left, float bottom, float right)
+        public AreaSettings(float top, float left, float bottom, float right)
         {
-            _units = units;
             _top = top;
             _left = left;
             _bottom = bottom;

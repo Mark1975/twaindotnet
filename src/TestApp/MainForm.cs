@@ -16,7 +16,7 @@ namespace TestApp
 
     public partial class MainForm : Form
     {
-        private static AreaSettings AreaSettings = new AreaSettings(Units.Centimeters, 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
+        private static AreaSettings AreaSettings = new AreaSettings(0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
 
         Twain _twain;
         ScanSettings _settings;
@@ -52,6 +52,7 @@ namespace TestApp
             Enabled = false;
 
             _settings = new ScanSettings();
+			_settings.Units = Units.Centimeters;
             _settings.UseDocumentFeeder = useAdfCheckBox.Checked;
             _settings.ShowTwainUI = useUICheckBox.Checked;
             _settings.ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked;

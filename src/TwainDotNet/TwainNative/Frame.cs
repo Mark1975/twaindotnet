@@ -12,6 +12,16 @@ namespace TwainDotNet.TwainNative
 
         public Fix32 Right;
 
-        public Fix32 Bottom;        
-    }
+        public Fix32 Bottom;
+
+		public override string ToString()
+		{
+			return string.Format(
+				"l {0} t {1} r {2} b {3}",
+				Left,
+				Top,
+				Right,
+				Bottom );
+		}
+	}
 }

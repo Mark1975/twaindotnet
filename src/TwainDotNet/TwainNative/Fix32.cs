@@ -24,10 +24,29 @@ namespace TwainDotNet.TwainNative
             this.Frac = frac;
         }
 
-        public float ToFloat()
+		public Fix32( int value )
+		{
+			byte[] bytes = BitConverter.GetBytes( value );
+			this.Whole = BitConverter.ToInt16( bytes, 0 );
+			this.Frac = BitConverter.ToUInt16( bytes, 2 );
+		}
+
+		public Fix32( uint value )
+		{
+			byte[] bytes = BitConverter.GetBytes( value );
+			this.Whole = BitConverter.ToInt16( bytes, 0 );
+			this.Frac = BitConverter.ToUInt16( bytes, 2 );
+		}
+
+		public float ToFloat()
         {
             var frac = Convert.ToSingle(this.Frac);
             return this.Whole + frac / 65536.0F;
-        }        
-    }
+        }
+
+		public override string ToString()
+		{
+			return this.ToFloat().ToString();
+		}
+	}
 }

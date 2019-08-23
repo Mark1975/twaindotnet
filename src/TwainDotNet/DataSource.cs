@@ -1,3 +1,4 @@
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,12 @@ namespace TwainDotNet
 {
     public class DataSource : IDisposable
     {
-        Identity _applicationId;
+		/// <summary>
+		/// The logger for this class.
+		/// </summary>
+		static ILog log = LogManager.GetLogger( typeof( DataSource ) );
+
+		Identity _applicationId;
         IWindowsMessageHook _messageHook;
         private IEnumerable<Capabilities> supportedCapabilities;
         private IEnumerable<Capabilities> extendedCapabilities;
@@ -58,17 +64,19 @@ namespace TwainDotNet
                 if( scanSettings.UseDocumentFeeder.HasValue )
                 {
                     NegotiateCapability( Capabilities.FeederEnabled, scanSettings.UseDocumentFeeder.Value );
+					if( scanSettings.UseDocumentFeeder.Value )
+					{
+						if( scanSettings.UseAutoFeeder.HasValue )
+						{
+							NegotiateCapability( Capabilities.AutoFeed, scanSettings.UseAutoFeeder == true && scanSettings.UseDocumentFeeder == true );
+						}
 
-                    if( scanSettings.UseAutoFeeder.HasValue )
-                    {
-                        NegotiateCapability( Capabilities.AutoFeed, scanSettings.UseAutoFeeder == true && scanSettings.UseDocumentFeeder == true );
-                    }
-
-                    if( scanSettings.UseAutoScanCache.HasValue )
-                    {
-                        NegotiateCapability( Capabilities.AutoScan, scanSettings.UseAutoScanCache.Value );
-                    }
-                }
+						if( scanSettings.UseAutoScanCache.HasValue )
+						{
+							NegotiateCapability( Capabilities.AutoScan, scanSettings.UseAutoScanCache.Value );
+						}
+					}
+				}
             }
             catch
             {
@@ -391,16 +399,13 @@ namespace TwainDotNet
             if( settings.AbortWhenNoPaperDetectable && !PaperDetectable )
                 throw new FeederEmptyException();
 
-            /*
-            foreach( Capabilities supportedCapability in supportedCapabilities )
-            {
-                Capability capability = new Capability( supportedCapability, _applicationId, SourceId );
-                CapabilityResult capabilityResult = capability.GetValue();
-            }
-            */
+			if( settings.DebugCapabilities )
+			{
+				this.DebugCapabilities();
+			}
 
-            // Set whether or not to show progress window
-            NegotiateProgressIndicator( settings );
+			// Set whether or not to show progress window
+			NegotiateProgressIndicator( settings );
             NegotiateTransferCount( settings );
             NegotiateFeeder( settings );
             NegotiateDuplex( settings );
@@ -413,12 +418,15 @@ namespace TwainDotNet
                 NegotiateOrientation( settings );
             }
 
-            if( settings.Area != null )
-            {
-                NegotiateArea( settings );
-            }
+			if( NegotiateUnits( settings ) )
+			{
+				if( settings.Area != null )
+				{
+					NegotiateArea( settings );
+				}
+			}
 
-            if( settings.Resolution != null )
+			if( settings.Resolution != null )
             {
                 NegotiateColour( settings );
                 NegotiateResolution( settings );
@@ -457,14 +465,32 @@ namespace TwainDotNet
             return new Capabilities[] { };
         }
 
-        private bool NegotiateUnits( ScanSettings scanSettings )
-        {
-            if( scanSettings.Area == null )
-            {
-                return false;
-            }
+		private void DebugCapabilities()
+		{
+			log.Debug( "Start debugging capabilities." );
+			foreach( Capabilities supportedCapability in supportedCapabilities )
+			{
+				if( supportedCapability == Capabilities.SupportedCapabilities )
+				{
+					continue;
+				}
 
-            Units requestedUnits = scanSettings.Area.Units;
+				try
+				{
+					CapabilityResult capabilityResult = Capability.GetCapability( supportedCapability, _applicationId, SourceId );
+					log.DebugFormat( "{0} {1}", supportedCapability, capabilityResult.ToString() );
+				}
+				catch( Exception ex )
+				{
+					log.DebugFormat( "{0} {1}", supportedCapability, ex.Message );
+				}
+			}
+			log.Debug( "End debugging capabilities." );
+		}
+
+		private bool NegotiateUnits( ScanSettings scanSettings )
+        {
+            Units requestedUnits = scanSettings.Units;
 
             if( !supportedCapabilities.Contains( Capabilities.IUnits ) )
             {
@@ -517,11 +543,6 @@ namespace TwainDotNet
                 return false;
             }
 
-            if( !NegotiateUnits( scanSettings ) )
-            {
-                return false;
-            }
-
             var imageLayout = new ImageLayout
             {
                 Frame = new Frame
@@ -554,7 +575,7 @@ namespace TwainDotNet
                                     Message.Get,
                                     imageLayout );
 
-                    scanSettings.Area = new AreaSettings( area.Units, imageLayout.Frame.Top.ToFloat(), imageLayout.Frame.Left.ToFloat(), imageLayout.Frame.Bottom.ToFloat(), imageLayout.Frame.Right.ToFloat() );
+                    scanSettings.Area = new AreaSettings( imageLayout.Frame.Top.ToFloat(), imageLayout.Frame.Left.ToFloat(), imageLayout.Frame.Bottom.ToFloat(), imageLayout.Frame.Right.ToFloat() );
                     break;
                 default:
                     ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, SourceId );
@@ -623,7 +644,8 @@ namespace TwainDotNet
                     break;
 
                 case TwainResult.Cancel:
-                    // Not documented; but can happen when user cancels UI dialog.
+					// Not documented; but can happen when user cancels UI dialog.
+					log.Warn( "Enable DS cancelled." );
                     return false;
                 default:
                     ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, SourceId );

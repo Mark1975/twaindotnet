@@ -11,6 +11,16 @@ namespace TwainDotNet.TwainNative
 
         public uint PageNumber;
 
-        public uint FrameNumber;        
-    }
+        public uint FrameNumber;
+
+		public override string ToString()
+		{
+			return string.Format(
+				"ImageLayout Frame:{0} DocumentNumber:{1} PageNumber:{2} FrameNumber:{3}",
+				Frame,
+				DocumentNumber,
+				PageNumber,
+				FrameNumber );
+		}
+	}
 }
