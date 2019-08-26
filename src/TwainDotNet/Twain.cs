@@ -101,5 +101,15 @@ namespace TwainDotNet
                 return result;
             }
         }
+
+        public ScanSettings GetCurrentScanSettings()
+        {
+            return _dataSourceManager.GetCurrentScanSettings();
+        }
+
+        public void DebugCapabilities()
+        {
+            _dataSourceManager.DebugCapabilities();
+        }
     }
 }

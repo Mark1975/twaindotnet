@@ -106,6 +106,61 @@ namespace TwainDotNet
             }
         }
 
+        public ScanSettings GetCurrentScanSettings()
+        {
+            ScanSettings result = new ScanSettings();
+
+            int initialState = DataSource.State;
+            try
+            {
+                DataSource.OpenSource();
+
+                // Set whether or not to show progress window
+                DataSource.NegotiateProgressIndicator( result );
+                DataSource.NegotiateTransferCount( result );
+                DataSource.NegotiateFeeder( result );
+                DataSource.NegotiateDuplex( result );
+                DataSource.NegotiateDataTransferMode( result );
+                DataSource.NegotiatePageSize( result );
+                DataSource.NegotiateOrientation( result );
+                DataSource.NegotiateUnits( result );
+                DataSource.NegotiateArea( result );
+                DataSource.NegotiateColour( result );
+                DataSource.NegotiateResolution( result );
+                DataSource.NegotiateAutomaticRotate( result );
+                DataSource.NegotiateAutomaticBorderDetection( result );
+                DataSource.NegotiateAutomaticDeskew( result );
+                DataSource.NegotiateFlipRotation( result );
+            }
+            finally
+            {
+                if( initialState < DataSource.State )
+                {
+                    DataSource.CloseSource();
+                }
+            }
+
+            return result;
+        }
+
+        public void DebugCapabilities()
+        {
+            int initialState = DataSource.State;
+            try
+            {
+                DataSource.OpenSource();
+
+                DataSource.DebugCapabilities();
+            }
+            finally
+            {
+                if( initialState < DataSource.State )
+                {
+                    DataSource.CloseSource();
+                }
+            }
+        }
+
         protected IntPtr FilterMessage( IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled )
         {
             if( DataSource.SourceId.Id == 0 )

@@ -6,7 +6,7 @@ Imports TwainDotNet.WinFroms
 
 Public Class MainForm
 
-    Dim areaSettings As New AreaSettings(Units.Centimeters, 0.1F, 5.7F, 0.1F + 2.6F, 5.7F + 2.6F)
+    Dim areaSettings As New AreaSettings(0.1F, 5.7F, 0.1F + 2.6F, 5.7F + 2.6F)
 
     ''' <summary>
     ''' Twain scanning library
@@ -69,15 +69,21 @@ Public Class MainForm
         settings.ShowTwainUI = useUICheckBox.Checked
         settings.ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked
         settings.UseDuplex = useDuplexCheckBox.Checked
-        settings.Resolution = If(blackAndWhiteCheckBox.Checked, ResolutionSettings.Fax, ResolutionSettings.ColourPhotocopier)
-        settings.Area = If(Not checkBoxArea.Checked, Nothing, areaSettings)
+        If (blackAndWhiteCheckBox.Checked) Then
+            settings.ColourSetting = ColourSetting.BlackAndWhite
+            settings.Dpi = 200
+        Else
+            settings.ColourSetting = ColourSetting.Colour
+            settings.Dpi = 300
+        End If
+        If (checkBoxArea.Checked) Then
+            settings.Units = Units.Centimeters
+            settings.Area = areaSettings
+        End If
         settings.ShouldTransferAllPages = True
 
-        settings.Rotation = New RotationSettings With
-        {
-            .AutomaticRotate = autoRotateCheckBox.Checked,
-            .AutomaticBorderDetection = autoDetectBorderCheckBox.Checked
-        }
+        settings.AutomaticRotate = autoRotateCheckBox.Checked
+        settings.AutomaticBorderDetection = autoDetectBorderCheckBox.Checked
 
         Try
             ' Start scanning. Depending on the settings above dialogs from the scanner driver may be displayed.

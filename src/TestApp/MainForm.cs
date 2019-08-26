@@ -57,17 +57,22 @@ namespace TestApp
             _settings.ShowTwainUI = useUICheckBox.Checked;
             _settings.ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked;
             _settings.UseDuplex = useDuplexCheckBox.Checked;
-            _settings.Resolution =
-                blackAndWhiteCheckBox.Checked
-                ? ResolutionSettings.Fax : ResolutionSettings.ColourPhotocopier;
             _settings.Area = !checkBoxArea.Checked ? null : AreaSettings;
             _settings.ShouldTransferAllPages = true;
 
-            _settings.Rotation = new RotationSettings()
+            if( blackAndWhiteCheckBox.Checked )
             {
-                AutomaticRotate = autoRotateCheckBox.Checked,
-                AutomaticBorderDetection = autoDetectBorderCheckBox.Checked
-            };
+                _settings.ColourSetting = ColourSetting.BlackAndWhite;
+                _settings.Dpi = 200;
+            }
+            else
+            {
+                _settings.ColourSetting = ColourSetting.Colour;
+                _settings.Dpi = 300;
+            }
+
+            _settings.AutomaticRotate = autoRotateCheckBox.Checked;
+            _settings.AutomaticBorderDetection = autoDetectBorderCheckBox.Checked;
 
             try
             {

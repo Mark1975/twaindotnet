@@ -95,31 +95,35 @@ namespace TestAppWpf
         {
             IsEnabled = false;
 
-
-            _settings = new ScanSettings
-            {
-                UseDocumentFeeder = UseAdfCheckBox.IsChecked,
-                UseAutoFeeder = UseAdfCheckBox.IsChecked,
-                ShowTwainUI = UseUICheckBox.IsChecked ?? false,
-                ShowProgressIndicatorUI = ShowProgressCheckBox.IsChecked,
-                UseDuplex = UseDuplexCheckBox.IsChecked,
-                Resolution = GetResolutionSettings(),
-				Units = Units.Inches,
-                Area = !( GrabAreaCheckBox.IsChecked ?? false ) ? null : AreaSettings,
-                ShouldTransferAllPages = true,
-                Rotation = new RotationSettings
-                {
-                    AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
-                    AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false
-                },
-                DataTransferMode = MemoryTransferMechanism.IsChecked.GetValueOrDefault() ? TransferMechanism.Memory : TransferMechanism.Native,
-				DebugCapabilities = true,
-            };
-
             try
             {
                 if (SourceUserSelected.IsChecked == true)
                     _twain.SelectSource(ManualSource.SelectedItem.ToString());
+
+                _twain.DebugCapabilities();
+                _settings = new ScanSettings { ShouldTransferAllPages = true, ShowTwainUI = true, };
+                /*
+                _settings = new ScanSettings
+                {
+                    UseDocumentFeeder = UseAdfCheckBox.IsChecked,
+                    UseAutoFeeder = UseAdfCheckBox.IsChecked,
+                    ShowTwainUI = UseUICheckBox.IsChecked ?? false,
+                    ShowProgressIndicatorUI = ShowProgressCheckBox.IsChecked,
+                    UseDuplex = UseDuplexCheckBox.IsChecked,
+                    Units = Units.Inches,
+                    Area = !( GrabAreaCheckBox.IsChecked ?? false ) ? null : AreaSettings,
+                    ShouldTransferAllPages = true,
+                    Rotation = new RotationSettings
+                    {
+                        AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
+                        AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false
+                    },
+                    DataTransferMode = MemoryTransferMechanism.IsChecked.GetValueOrDefault() ? TransferMechanism.Memory : TransferMechanism.Native,
+                    DebugCapabilities = true,
+                };
+                GetResolutionSettings( _settings );
+                */
+
                 _twain.StartScanning(_settings);
             }
             catch (TwainException ex)
@@ -130,22 +134,28 @@ namespace TestAppWpf
             IsEnabled = true;
         }
 
-        private ResolutionSettings GetResolutionSettings()
+        private void GetResolutionSettings( ScanSettings scanSettings )
         {
+            ColourSetting colourSetting = ColourSetting.Default;
+            float? dpi = null;
             if( ColourBlackAndWhite.IsChecked.GetValueOrDefault() )
             {
-                return ResolutionSettings.Fax;
+                colourSetting = ColourSetting.BlackAndWhite;
+                dpi = 200;
             }
-            if( ColourGrayscale.IsChecked.GetValueOrDefault() )
+            else if( ColourGrayscale.IsChecked.GetValueOrDefault() )
             {
-                return ResolutionSettings.Photocopier;
+                colourSetting = ColourSetting.GreyScale;
+                dpi = 300;
             }
-            if( ColourColour.IsChecked.GetValueOrDefault() )
+            else if( ColourColour.IsChecked.GetValueOrDefault() )
             {
-                return ResolutionSettings.ColourPhotocopier;
+                colourSetting = ColourSetting.Colour;
+                dpi = 300;
             }
 
-            return new ResolutionSettings();
+            scanSettings.ColourSetting = colourSetting;
+            scanSettings.Dpi = dpi;
         }
 
         private void OnSaveButtonClick(object sender, RoutedEventArgs e)

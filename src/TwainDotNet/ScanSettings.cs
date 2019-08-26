@@ -10,7 +10,6 @@ namespace TwainDotNet
     {
         public ScanSettings()
         {
-            ShouldTransferAllPages = true;
         }
 
         bool _showTwainUI;
@@ -126,12 +125,12 @@ namespace TwainDotNet
             }
         }
 
-        short _transferCount;
+        short? _transferCount;
 
         /// <summary>
         /// The number of pages to transfer.
         /// </summary>
-        public short TransferCount
+        public short? TransferCount
         {
             get { return _transferCount; }
             set
@@ -152,24 +151,6 @@ namespace TwainDotNet
         {
             get { return _transferCount == TransferAllPages; }
             set { TransferCount = value ? TransferAllPages : (short)1; }
-        }
-
-        ResolutionSettings _resolution;
-
-        /// <summary>
-        /// The resolution settings. Set null to use current defaults.
-        /// </summary>
-        public ResolutionSettings Resolution
-        {
-            get { return _resolution; }
-            set
-            {
-                if (value != _resolution)
-                {
-                    _resolution = value;
-                    OnPropertyChanged("Resolution");
-                }
-            }
         }
 
         bool? _useDuplex;
@@ -224,28 +205,9 @@ namespace TwainDotNet
             }
         }
 
-        RotationSettings _rotation;
+        TwainNative.TransferMechanism? _dataTransferMode;
 
-        /// <summary>
-        /// Gets or sets the rotation.
-        /// </summary>
-        /// <value>The rotation.</value>
-        public RotationSettings Rotation
-        {
-            get { return _rotation; }
-            set
-            {
-                if (value != _rotation)
-                {
-                    _rotation = value;
-                    OnPropertyChanged("Rotation");
-                }
-            }
-        }
-
-        TwainNative.TransferMechanism _dataTransferMode;
-
-        public TwainNative.TransferMechanism DataTransferMode
+        public TwainNative.TransferMechanism? DataTransferMode
         {
             get
             {
@@ -261,8 +223,8 @@ namespace TwainDotNet
             }
         }
 
-		private Units _units;
-		public Units Units
+		private Units? _units;
+		public Units? Units
 		{
 			get
 			{
@@ -275,30 +237,144 @@ namespace TwainDotNet
 			}
 		}
 
-		bool _debugCapabilities;
+        public Units[] UnitsOptions
+        {
+            get;
+            set;
+        }
 
-		/// <summary>
-		/// Indicates whether the source capabilities should be debugged.
-		/// </summary>
-		public bool DebugCapabilities
-		{
-			get
-			{
-				return _debugCapabilities;
-			}
-			set
-			{
-				if( value != _debugCapabilities )
-				{
-					_debugCapabilities = value;
-					OnPropertyChanged( "DebugCapabilities" );
-				}
-			}
-		}
+        float? _dpi;
 
-		#region INotifyPropertyChanged Members
+        /// <summary>
+        /// The DPI to scan at. Set to null to use the current default setting.
+        /// </summary>
+        public float? Dpi
+        {
+            get
+            {
+                return _dpi;
+            }
+            set
+            {
+                if( value != _dpi )
+                {
+                    _dpi = value;
+                    OnPropertyChanged( "Dpi" );
+                }
+            }
+        }
 
-		protected void OnPropertyChanged(string propertyName)
+        ColourSetting _colourSettings;
+
+        /// <summary>
+        /// The colour settings to use.
+        /// </summary>
+        public ColourSetting ColourSetting
+        {
+            get
+            {
+                return _colourSettings;
+            }
+            set
+            {
+                if( value != _colourSettings )
+                {
+                    _colourSettings = value;
+                    OnPropertyChanged( "ColourSetting" );
+                }
+            }
+        }
+
+        private bool? automaticBorderDetection;
+        /// <summary>
+        /// Gets or sets a value indicating whether [automatic border detection].
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if [automatic border detection]; otherwise, <c>false</c>.
+        /// </value>
+        public bool? AutomaticBorderDetection
+        {
+            get
+            {
+                return automaticBorderDetection;
+            }
+            set
+            {
+                if( value != automaticBorderDetection )
+                {
+                    automaticBorderDetection = value;
+                    OnPropertyChanged( "AutomaticBorderDetection" );
+                }
+            }
+        }
+
+        private bool? automaticDeskew;
+        private bool? automaticRotate;
+        private FlipRotation? flipRotation;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [automatic deskew].
+        /// </summary>
+        /// <value><c>true</c> if [automatic deskew]; otherwise, <c>false</c>.</value>
+        public bool? AutomaticDeskew
+        {
+            get
+            {
+                return automaticDeskew;
+            }
+            set
+            {
+                if( value != automaticDeskew )
+                {
+                    automaticDeskew = value;
+                    OnPropertyChanged( "AutomaticDeskew" );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [automatic rotate].
+        /// </summary>
+        /// <value><c>true</c> if [automatic rotate]; otherwise, <c>false</c>.</value>
+        public bool? AutomaticRotate
+        {
+            get
+            {
+                return automaticRotate;
+            }
+            set
+            {
+                if( value != automaticRotate )
+                {
+                    automaticRotate = value;
+                    OnPropertyChanged( "AutomaticRotate" );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flip side rotation.
+        /// </summary>
+        /// <value>The flip side rotation.</value>
+        public FlipRotation? FlipRotation
+        {
+            get
+            {
+                return flipRotation;
+            }
+            set
+            {
+                if( value != flipRotation )
+                {
+                    flipRotation = value;
+                    OnPropertyChanged( "FlipRotation" );
+                }
+            }
+        }
+
+        #region INotifyPropertyChanged Members
+
+        protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -312,14 +388,25 @@ namespace TwainDotNet
         /// </summary>
         public static readonly ScanSettings Default = new ScanSettings()
         {
-            Resolution = ResolutionSettings.ColourPhotocopier,
+            ColourSetting = ColourSetting.Colour,
+            Dpi = 300,
             Page = PageSettings.Default,
-            Rotation = new RotationSettings()
         };
 
         /// <summary>
         /// The value to set to scan all available pages.
         /// </summary>
         public const short TransferAllPages = -1;
+    }
+
+    public enum ColourSetting
+    {
+        Default,
+
+        BlackAndWhite,
+
+        GreyScale,
+
+        Colour
     }
 }

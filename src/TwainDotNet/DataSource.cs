@@ -8,12 +8,12 @@ namespace TwainDotNet
 {
     public class DataSource : IDisposable
     {
-		/// <summary>
-		/// The logger for this class.
-		/// </summary>
-		static ILog log = LogManager.GetLogger( typeof( DataSource ) );
+        /// <summary>
+        /// The logger for this class.
+        /// </summary>
+        static ILog log = LogManager.GetLogger( typeof( DataSource ) );
 
-		Identity _applicationId;
+        Identity _applicationId;
         IWindowsMessageHook _messageHook;
         private IEnumerable<Capabilities> supportedCapabilities;
         private IEnumerable<Capabilities> extendedCapabilities;
@@ -44,12 +44,23 @@ namespace TwainDotNet
         {
             try
             {
-                scanSettings.TransferCount = ( short )Capability.SetCapability(
-                        Capabilities.XferCount,
-                        scanSettings.TransferCount,
-                        TwainType.Int16,
-                        _applicationId,
-                        SourceId );
+                if( scanSettings.TransferCount.HasValue )
+                {
+                    scanSettings.TransferCount = ( short )Capability.SetCapability(
+                            Capabilities.XferCount,
+                            scanSettings.TransferCount.Value,
+                            TwainType.Int16,
+                            _applicationId,
+                            SourceId );
+                }
+                else
+                {
+                    BasicCapabilityResult basicCapabilityResult = Capability.GetCapability( Capabilities.XferCount, Message.Get, _applicationId, SourceId ) as BasicCapabilityResult;
+                    if( basicCapabilityResult != null )
+                    {
+                        scanSettings.TransferCount = basicCapabilityResult.Int16Value;
+                    }
+                }
             }
             catch
             {
@@ -64,19 +75,19 @@ namespace TwainDotNet
                 if( scanSettings.UseDocumentFeeder.HasValue )
                 {
                     NegotiateCapability( Capabilities.FeederEnabled, scanSettings.UseDocumentFeeder.Value );
-					if( scanSettings.UseDocumentFeeder.Value )
-					{
-						if( scanSettings.UseAutoFeeder.HasValue )
-						{
-							NegotiateCapability( Capabilities.AutoFeed, scanSettings.UseAutoFeeder == true && scanSettings.UseDocumentFeeder == true );
-						}
+                    if( scanSettings.UseDocumentFeeder.Value )
+                    {
+                        if( scanSettings.UseAutoFeeder.HasValue )
+                        {
+                            NegotiateCapability( Capabilities.AutoFeed, scanSettings.UseAutoFeeder == true && scanSettings.UseDocumentFeeder == true );
+                        }
 
-						if( scanSettings.UseAutoScanCache.HasValue )
-						{
-							NegotiateCapability( Capabilities.AutoScan, scanSettings.UseAutoScanCache.Value );
-						}
-					}
-				}
+                        if( scanSettings.UseAutoScanCache.HasValue )
+                        {
+                            NegotiateCapability( Capabilities.AutoScan, scanSettings.UseAutoScanCache.Value );
+                        }
+                    }
+                }
             }
             catch
             {
@@ -86,7 +97,7 @@ namespace TwainDotNet
 
         public PixelType GetPixelType( ScanSettings scanSettings )
         {
-            switch( scanSettings.Resolution.ColourSetting )
+            switch( scanSettings.ColourSetting )
             {
                 case ColourSetting.BlackAndWhite:
                     return PixelType.BlackAndWhite;
@@ -103,7 +114,7 @@ namespace TwainDotNet
 
         public short GetBitDepth( ScanSettings scanSettings )
         {
-            switch( scanSettings.Resolution.ColourSetting )
+            switch( scanSettings.ColourSetting )
             {
                 case ColourSetting.BlackAndWhite:
                     return 1;
@@ -156,7 +167,7 @@ namespace TwainDotNet
 
         public void NegotiateColour( ScanSettings scanSettings )
         {
-            if( scanSettings.Resolution.ColourSetting == ColourSetting.Default )
+            if( scanSettings.ColourSetting == ColourSetting.Default )
             {
                 return;
             }
@@ -191,10 +202,10 @@ namespace TwainDotNet
         {
             try
             {
-                if( scanSettings.Resolution.Dpi.HasValue )
+                if( scanSettings.Dpi.HasValue )
                 {
                     // Resolution is of type TW_FIX32.
-                    Fix32 dpi = new Fix32( scanSettings.Resolution.Dpi.Value );
+                    Fix32 dpi = new Fix32( scanSettings.Dpi.Value );
                     NegotiateCapability( Capabilities.XResolution, dpi );
                     NegotiateCapability( Capabilities.YResolution, dpi );
                 }
@@ -247,6 +258,16 @@ namespace TwainDotNet
             }
 
             Capability.SetCapability( capabilities, value, _applicationId, SourceId );
+        }
+
+        private bool? GetBoolCapability( Capabilities capabilities )
+        {
+            if( !supportedCapabilities.Contains( capabilities ) )
+            {
+                return null;
+            }
+
+            return Capability.GetBoolCapability( capabilities, _applicationId, SourceId );
         }
 
         public void NegotiateDuplex( ScanSettings scanSettings )
@@ -324,9 +345,28 @@ namespace TwainDotNet
         {
             try
             {
-                if( scanSettings.Rotation.AutomaticRotate )
+                if( scanSettings.AutomaticRotate.HasValue )
                 {
-                    NegotiateCapability( Capabilities.Automaticrotate, true );
+                    NegotiateCapability( Capabilities.Automaticrotate, scanSettings.AutomaticRotate.Value );
+                }
+            }
+            catch
+            {
+                // Do nothing if the data source does not support the requested capability
+            }
+        }
+
+        /// <summary>
+        /// Negotiates the automatic deskew capability.
+        /// </summary>
+        /// <param name="scanSettings">The scan settings.</param>
+        public void NegotiateAutomaticDeskew( ScanSettings scanSettings )
+        {
+            try
+            {
+                if( scanSettings.AutomaticDeskew.HasValue )
+                {
+                    NegotiateCapability( Capabilities.Automaticdeskew, scanSettings.AutomaticDeskew.Value );
                 }
             }
             catch
@@ -343,14 +383,43 @@ namespace TwainDotNet
         {
             try
             {
-                if( scanSettings.Rotation.AutomaticBorderDetection )
+                if( scanSettings.AutomaticBorderDetection.HasValue )
                 {
-                    NegotiateCapability( Capabilities.Automaticborderdetection, true );
+                    NegotiateCapability( Capabilities.Automaticborderdetection, scanSettings.AutomaticBorderDetection.Value );
                 }
             }
             catch
             {
                 // Do nothing if the data source does not support the requested capability
+            }
+        }
+
+        /// <summary>
+        /// Negotiates flip rotation capability.
+        /// </summary>
+        /// <param name="scanSettings">The scan settings.</param>
+        public bool NegotiateFlipRotation( ScanSettings scanSettings )
+        {
+            ushort? requestedValue = ( ushort? )scanSettings.FlipRotation;
+            Tuple<ushort?, ushort[]> result = NegotiateEnumCapability( Capabilities.Fliprotation, requestedValue );
+            if( !result.Item1.HasValue )
+            {
+                // Capability not supported.
+                scanSettings.FlipRotation = null;
+                return false;
+            }
+            else
+            {
+                scanSettings.FlipRotation = ( FlipRotation )result.Item1.Value;
+                //scanSettings.FlipRotationOptions = result.Item2.Cast<FlipRotation>().ToArray();
+
+                if( requestedValue.HasValue && result.Item1.Value != requestedValue.Value )
+                {
+                    // Value not supported.
+                    return false;
+                }
+                // No requested value; or match.
+                return true;
             }
         }
 
@@ -366,6 +435,10 @@ namespace TwainDotNet
                 {
                     NegotiateCapability( Capabilities.Indicators, scanSettings.ShowProgressIndicatorUI.Value );
                 }
+                else
+                {
+                    scanSettings.ShowProgressIndicatorUI = this.GetBoolCapability( Capabilities.Indicators );
+                }
             }
             catch
             {
@@ -377,35 +450,40 @@ namespace TwainDotNet
         /// Negotiates the indicator.
         /// </summary>
         /// <param name="scanSettings">The scan settings.</param>
-        public void NegotiateDataTransferMode( ScanSettings scanSettings )
+        public bool NegotiateDataTransferMode( ScanSettings scanSettings )
         {
-            try
+            ushort? requestedValue = ( ushort? )scanSettings.DataTransferMode;
+            Tuple<ushort?, ushort[]> result = NegotiateEnumCapability( Capabilities.IXferMech, requestedValue );
+            if( !result.Item1.HasValue )
             {
-                Capability.SetCapability( Capabilities.IXferMech, ( short )scanSettings.DataTransferMode, TwainType.UInt16, _applicationId, SourceId );
+                // Capability not supported.
+                scanSettings.DataTransferMode = null;
+                return false;
             }
-            catch( Exception ex )
+            else
             {
-                // Do nothing if the data source does not support the requested capability
+                scanSettings.DataTransferMode = ( TransferMechanism )result.Item1.Value;
+                //scanSettings.FlipRotationOptions = result.Item2.Cast<FlipRotation>().ToArray();
+
+                if( requestedValue.HasValue && result.Item1.Value != requestedValue.Value )
+                {
+                    // Value not supported.
+                    return false;
+                }
+                // No requested value; or match.
+                return true;
             }
         }
 
         public bool Open( ScanSettings settings )
         {
-            OpenSource();
-
-            supportedCapabilities = GetSupportedCapabilities();
-            extendedCapabilities = GetExtendedCapabilities();
+            this.OpenSource();
 
             if( settings.AbortWhenNoPaperDetectable && !PaperDetectable )
                 throw new FeederEmptyException();
 
-			if( settings.DebugCapabilities )
-			{
-				this.DebugCapabilities();
-			}
-
-			// Set whether or not to show progress window
-			NegotiateProgressIndicator( settings );
+            // Set whether or not to show progress window
+            NegotiateProgressIndicator( settings );
             NegotiateTransferCount( settings );
             NegotiateFeeder( settings );
             NegotiateDuplex( settings );
@@ -418,26 +496,20 @@ namespace TwainDotNet
                 NegotiateOrientation( settings );
             }
 
-			if( NegotiateUnits( settings ) )
-			{
-				if( settings.Area != null )
-				{
-					NegotiateArea( settings );
-				}
-			}
-
-			if( settings.Resolution != null )
+            if( NegotiateUnits( settings ) )
             {
-                NegotiateColour( settings );
-                NegotiateResolution( settings );
+                if( settings.Area != null )
+                {
+                    NegotiateArea( settings );
+                }
             }
 
-            // Configure automatic rotation and image border detection
-            if( settings.Rotation != null )
-            {
-                NegotiateAutomaticRotate( settings );
-                NegotiateAutomaticBorderDetection( settings );
-            }
+            NegotiateColour( settings );
+            NegotiateResolution( settings );
+            NegotiateAutomaticRotate( settings );
+            NegotiateAutomaticDeskew( settings );
+            NegotiateAutomaticBorderDetection( settings );
+            NegotiateFlipRotation( settings );
 
             return Enable( settings );
         }
@@ -454,7 +526,7 @@ namespace TwainDotNet
 
         private IEnumerable<Capabilities> GetExtendedCapabilities()
         {
-            if( supportedCapabilities.Contains( Capabilities.Extendedcaps ) )
+            if( this.supportedCapabilities != null && supportedCapabilities.Contains( Capabilities.Extendedcaps ) )
             {
                 CapabilityResult capabilityResult = Capability.GetCapability( Capabilities.Extendedcaps, _applicationId, SourceId );
                 if( capabilityResult is ArrayCapabilityResult arrayCapabilityResult )
@@ -465,76 +537,108 @@ namespace TwainDotNet
             return new Capabilities[] { };
         }
 
-		private void DebugCapabilities()
-		{
-			log.Debug( "Start debugging capabilities." );
-			foreach( Capabilities supportedCapability in supportedCapabilities )
-			{
-				if( supportedCapability == Capabilities.SupportedCapabilities )
-				{
-					continue;
-				}
-
-				try
-				{
-					CapabilityResult capabilityResult = Capability.GetCapability( supportedCapability, _applicationId, SourceId );
-					log.DebugFormat( "{0} {1}", supportedCapability, capabilityResult.ToString() );
-				}
-				catch( Exception ex )
-				{
-					log.DebugFormat( "{0} {1}", supportedCapability, ex.Message );
-				}
-			}
-			log.Debug( "End debugging capabilities." );
-		}
-
-		private bool NegotiateUnits( ScanSettings scanSettings )
+        public void DebugCapabilities()
         {
-            Units requestedUnits = scanSettings.Units;
-
-            if( !supportedCapabilities.Contains( Capabilities.IUnits ) )
+            log.Debug( "Start debugging capabilities." );
+            foreach( Capabilities supportedCapability in supportedCapabilities )
             {
+                if( supportedCapability == Capabilities.SupportedCapabilities )
+                {
+                    continue;
+                }
+
+                try
+                {
+                    CapabilityResult capabilityResult = Capability.GetCapability( supportedCapability, _applicationId, SourceId );
+                    log.DebugFormat( "{0} {1}", supportedCapability, capabilityResult.ToString() );
+                }
+                catch( Exception ex )
+                {
+                    log.DebugFormat( "{0} {1}", supportedCapability, ex.Message );
+                }
+            }
+            log.Debug( "End debugging capabilities." );
+        }
+
+        public bool NegotiateUnits( ScanSettings scanSettings )
+        {
+            ushort? requestedValue = ( ushort? )scanSettings.Units;
+            Tuple<ushort?, ushort[]> result = NegotiateEnumCapability( Capabilities.IUnits, requestedValue );
+            if( !result.Item1.HasValue )
+            {
+                // Capability not supported.
+                scanSettings.Units = null;
+                scanSettings.UnitsOptions = null;
                 return false;
             }
-
-            try
+            else
             {
-                CapabilityResult capabilityResult = Capability.GetCapability( Capabilities.IUnits, _applicationId, SourceId );
-                if( capabilityResult is BasicCapabilityResult basicCapabilityResult )
+                scanSettings.Units = ( Units )result.Item1.Value;
+                scanSettings.UnitsOptions = result.Item2.Cast<Units>().ToArray();
+
+                if( requestedValue.HasValue && result.Item1.Value != requestedValue.Value )
                 {
-                    if( basicCapabilityResult.UInt16Value == ( ushort )requestedUnits )
-                    {
-                        return true;
-                    }
+                    // Value not supported.
                     return false;
                 }
-
-                if( capabilityResult is EnumCapabilityResult enumCapabilityResult )
-                {
-                    Units[] units = enumCapabilityResult.GetUInt16Items().Cast<Units>().ToArray();
-                    if( !units.Contains( requestedUnits ) )
-                    {
-                        return false;
-                    }
-
-                    if( units[enumCapabilityResult.CurrentIndex] == requestedUnits )
-                    {
-                        return true;
-                    }
-                }
-
-                Capability.SetCapability( Capabilities.IUnits, ( ushort )requestedUnits, TwainType.UInt16, _applicationId, SourceId );
-
+                // No requested value; or match.
                 return true;
-            }
-            catch
-            {
-                // Do nothing if the data source does not support the requested capability
-                return false;
             }
         }
 
-        private bool NegotiateArea( ScanSettings scanSettings )
+        private Tuple<ushort?, ushort[]> NegotiateEnumCapability( Capabilities capabilities, ushort? requestedValue )
+        {
+            ushort? result = null;
+            ushort[] options = null;
+            if( supportedCapabilities.Contains( capabilities ) )
+            {
+                try
+                {
+
+                    CapabilityResult capabilityResult = Capability.GetCapability( capabilities, _applicationId, SourceId );
+                    if( capabilityResult is BasicCapabilityResult basicCapabilityResult )
+                    {
+                        // Source supports single value for this enum
+                        result = basicCapabilityResult.UInt16Value;
+                        options = new ushort[] { result.Value };
+                    }
+                    else if( capabilityResult is EnumCapabilityResult enumCapabilityResult )
+                    {
+                        options = enumCapabilityResult.GetUInt16Items().ToArray();
+                        result = options[enumCapabilityResult.CurrentIndex];
+
+                        if( requestedValue.HasValue )
+                        {
+                            if( result == requestedValue.Value )
+                            {
+                                // Requested item equals current item.
+                            }
+                            else if( !options.Contains( requestedValue.Value ) )
+                            {
+                                // Requested item not allowed; return current item.
+                            }
+                            else
+                            {
+                                // requested value is in options list; SetCapability should succeed.
+                                Capability.SetCapability( capabilities, requestedValue.Value, TwainType.UInt16, _applicationId, SourceId );
+                                result = requestedValue;
+                            }
+                        }
+                        else
+                        {
+                            // Just return current item.
+                        }
+                    }
+                }
+                catch
+                {
+                    // Do nothing if the data source does not support the requested capability
+                }
+            }
+            return new Tuple<ushort?, ushort[]>( result, options );
+        }
+
+        public bool NegotiateArea( ScanSettings scanSettings )
         {
             var area = scanSettings.Area;
 
@@ -588,21 +692,43 @@ namespace TwainDotNet
 
         public void OpenSource()
         {
-            var result = Twain32Native.DsmIdentity(
-                   _applicationId,
-                   IntPtr.Zero,
-                   DataGroup.Control,
-                   DataArgumentType.Identity,
-                   Message.OpenDS,
-                   SourceId );
-
-            if( result != TwainResult.Success )
+            if( this.State < 4 )
             {
-                ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, null );
-                throw new TwainException( $"Error opening data source {result} {conditionCode}.", result, conditionCode );
-            }
+                var result = Twain32Native.DsmIdentity(
+                       _applicationId,
+                       IntPtr.Zero,
+                       DataGroup.Control,
+                       DataArgumentType.Identity,
+                       Message.OpenDS,
+                       SourceId );
 
-            this.State = 4;
+                if( result != TwainResult.Success )
+                {
+                    ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, null );
+                    throw new TwainException( $"Error opening data source {result} {conditionCode}.", result, conditionCode );
+                }
+
+                this.State = 4;
+
+                try
+                {
+                    this.supportedCapabilities = GetSupportedCapabilities();
+                    this.extendedCapabilities = GetExtendedCapabilities();
+                }
+                catch( Exception ex )
+                {
+                    log.Error( "Error getting supported capabilities: " + ex.Message, ex );
+                }
+
+                try
+                {
+                    this.extendedCapabilities = GetExtendedCapabilities();
+                }
+                catch( Exception ex )
+                {
+                    log.Error( "Error getting extended capabilities: " + ex.Message, ex );
+                }
+            }
         }
 
         public bool Enable( ScanSettings settings )
@@ -644,8 +770,8 @@ namespace TwainDotNet
                     break;
 
                 case TwainResult.Cancel:
-					// Not documented; but can happen when user cancels UI dialog.
-					log.Warn( "Enable DS cancelled." );
+                    // Not documented; but can happen when user cancels UI dialog.
+                    log.Warn( "Enable DS cancelled." );
                     return false;
                 default:
                     ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, SourceId );
@@ -804,9 +930,17 @@ namespace TwainDotNet
                     }
                 }
 
+                this.CloseSource();
+            }
+        }
+
+        public void CloseSource()
+        {
+            if( SourceId.Id != 0 )
+            {
                 if( this.State >= 4 )
                 {
-                    result = Twain32Native.DsmIdentity(
+                    TwainResult result = Twain32Native.DsmIdentity(
                         _applicationId,
                         IntPtr.Zero,
                         DataGroup.Control,
@@ -820,7 +954,7 @@ namespace TwainDotNet
                     }
                     else
                     {
-                        conditionCode = DataSourceManager.GetConditionCode( _applicationId, SourceId );
+                        ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, SourceId );
                     }
                 }
             }
