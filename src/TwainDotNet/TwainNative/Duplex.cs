@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Duplex : short
+    public enum Duplex : ushort
     {
         None = 0,
         OnePass = 1,

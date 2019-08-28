@@ -34,10 +34,14 @@ Public Class MainForm
         ' Add a handler to grab each image as it comes off the scanner
         AddHandler twain.TransferImage,
             Sub(sender As Object, args As TwainDotNet.TransferImageEventArgs)
-                If (Not (args.Image Is Nothing)) Then
-                    pictureBox1.Image = args.Image
+                If (args.HBitmap <> IntPtr.Zero) Then
+                    Dim renderer As New TwainDotNet.Win32.BitmapRenderer(args.HBitmap)
+                    Using renderer
+                        pictureBox1.Image = renderer.RenderToBitmap()
+                    End Using
 
-                    images.Add(args.Image)
+
+                    images.Add(pictureBox1.Image)
 
                     widthLabel.Text = String.Format("Width: {0}", pictureBox1.Image.Width)
                     heightLabel.Text = String.Format("Height: {0}", pictureBox1.Image.Height)

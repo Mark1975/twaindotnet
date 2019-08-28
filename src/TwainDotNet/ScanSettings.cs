@@ -186,25 +186,6 @@ namespace TwainDotNet
             }
         }
 
-        PageSettings _page;
-
-        /// <summary>
-        /// The page / paper settings. Set null to use current defaults.
-        /// </summary>
-        /// <value>The page.</value>
-        public PageSettings Page
-        {
-            get { return _page; }
-            set
-            {
-                if (value != _page)
-                {
-                    _page = value;
-                    OnPropertyChanged("Page");
-                }
-            }
-        }
-
         TwainNative.TransferMechanism? _dataTransferMode;
 
         public TwainNative.TransferMechanism? DataTransferMode
@@ -372,6 +353,49 @@ namespace TwainDotNet
             }
         }
 
+        Orientation? _orientation;
+
+        /// <summary>
+        /// Gets or sets the page orientation.
+        /// </summary>
+        /// <value>The orientation.</value>
+        public Orientation? Orientation
+        {
+            get
+            {
+                return _orientation;
+            }
+            set
+            {
+                if( value != _orientation )
+                {
+                    _orientation = value;
+                    OnPropertyChanged( "Orientation" );
+                }
+            }
+        }
+
+        PageType? _size;
+        /// <summary>
+        /// Gets or sets the Page Size.
+        /// </summary>
+        /// <value>The size.</value>
+        public PageType? Size
+        {
+            get
+            {
+                return _size;
+            }
+            set
+            {
+                if( value != _size )
+                {
+                    _size = value;
+                    OnPropertyChanged( "PaperSize" );
+                }
+            }
+        }
+
         #region INotifyPropertyChanged Members
 
         protected void OnPropertyChanged(string propertyName)
@@ -390,7 +414,6 @@ namespace TwainDotNet
         {
             ColourSetting = ColourSetting.Colour,
             Dpi = 300,
-            Page = PageSettings.Default,
         };
 
         /// <summary>

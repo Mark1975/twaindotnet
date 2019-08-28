@@ -55,6 +55,8 @@ namespace TwainDotNet
 
             if( result == TwainResult.Success )
             {
+                log.Info( $"OpenDSM {result}." );
+
                 //according to the 2.0 spec (2-10) if (applicationId.SupportedGroups
                 // | DataGroup.Dsm2) > 0 then we should call DM_Entry(id, 0, DG_Control, DAT_Entrypoint, MSG_Get, wh)
                 //right here
@@ -62,7 +64,8 @@ namespace TwainDotNet
             }
             else
             {
-                throw new TwainException( "Error initialising DSM: " + result, result );
+                ConditionCode conditionCode = GetConditionCode( ApplicationId, null );
+                throw new TwainException( $"Error initialising DSM: {result} {conditionCode}", result,conditionCode );
             }
         }
 
@@ -86,7 +89,7 @@ namespace TwainDotNet
             }
         }
 
-        public void StartScan( ScanSettings settings )
+        public bool StartScan( ScanSettings settings )
         {
             bool scanning = false;
 
@@ -94,6 +97,7 @@ namespace TwainDotNet
             {
                 _messageHook.UseFilter = true;
                 scanning = DataSource.Open( settings );
+                return scanning;
             }
             finally
             {
@@ -319,10 +323,7 @@ namespace TwainDotNet
                             }
                             else
                             {
-                                using( var renderer = new BitmapRenderer( hbitmap ) )
-                                {
-                                    args = new TransferImageEventArgs( renderer.RenderToBitmap(), DataSource.State == 6 );
-								}
+                                args = new TransferImageEventArgs( hbitmap, DataSource.State == 6 );
                             }
                             break;
 
@@ -560,6 +561,11 @@ namespace TwainDotNet
 
         public void SelectSource( DataSource dataSource )
         {
+            if( dataSource != null )
+            {
+                log.Info( $"SelectSource {dataSource.SourceId.ProductName}" );
+            }
+
             DataSource.Dispose();
             DataSource = dataSource;
         }
@@ -583,13 +589,15 @@ namespace TwainDotNet
                 if( ApplicationId.Id != 0 )
                 {
                     // Close down the data source manager
-                    Twain32Native.DsmParent(
+                    TwainResult twainResult = Twain32Native.DsmParent(
                         ApplicationId,
                         IntPtr.Zero,
                         DataGroup.Control,
                         DataArgumentType.Parent,
                         Message.CloseDSM,
                         ref windowHandle );
+
+                    log.Info( $"CloseDSM {twainResult}." );
                 }
 
                 ApplicationId.Id = 0;

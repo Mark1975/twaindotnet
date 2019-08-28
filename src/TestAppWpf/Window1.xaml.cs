@@ -32,10 +32,13 @@ namespace TestAppWpf
                 {
                     MainImage.Source = null;
 
-                    if( args.Image != null)
+                    if( args.HBitmap != IntPtr.Zero)
                     {
-                        resultImage = args.Image;
-                        IntPtr hbitmap = new Bitmap(args.Image).GetHbitmap();
+                        using( var renderer = new BitmapRenderer( args.HBitmap ) )
+                        {
+                            resultImage = renderer.RenderToBitmap();
+                        }
+                        IntPtr hbitmap = new Bitmap(resultImage).GetHbitmap();
                         MainImage.Source = Imaging.CreateBitmapSourceFromHBitmap(
                                 hbitmap,
                                 IntPtr.Zero,
@@ -101,8 +104,8 @@ namespace TestAppWpf
                     _twain.SelectSource(ManualSource.SelectedItem.ToString());
 
                 _twain.DebugCapabilities();
-                _settings = new ScanSettings { ShouldTransferAllPages = true, ShowTwainUI = true, };
-                /*
+                //_settings = new ScanSettings { ShouldTransferAllPages = true, ShowTwainUI = true, };
+
                 _settings = new ScanSettings
                 {
                     UseDocumentFeeder = UseAdfCheckBox.IsChecked,
@@ -113,16 +116,11 @@ namespace TestAppWpf
                     Units = Units.Inches,
                     Area = !( GrabAreaCheckBox.IsChecked ?? false ) ? null : AreaSettings,
                     ShouldTransferAllPages = true,
-                    Rotation = new RotationSettings
-                    {
-                        AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
-                        AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false
-                    },
+                    AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
+                    AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false,
                     DataTransferMode = MemoryTransferMechanism.IsChecked.GetValueOrDefault() ? TransferMechanism.Memory : TransferMechanism.Native,
-                    DebugCapabilities = true,
                 };
                 GetResolutionSettings( _settings );
-                */
 
                 _twain.StartScanning(_settings);
             }

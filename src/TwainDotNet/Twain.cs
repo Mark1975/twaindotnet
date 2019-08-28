@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using TwainDotNet.TwainNative;
-using TwainDotNet.Win32;
-using System.Drawing;
 
 namespace TwainDotNet
 {
-    public class Twain
+    public class Twain : IDisposable
     {
         DataSourceManager _dataSourceManager;
 
-        public Twain(IWindowsMessageHook messageHook)
+        public Twain( IWindowsMessageHook messageHook )
         {
-            ScanningComplete += delegate { };
-            TransferImage += delegate { };
-
-            _dataSourceManager = new DataSourceManager(DataSourceManager.DefaultApplicationId, messageHook);
-            _dataSourceManager.ScanningComplete += delegate(object sender, ScanningCompleteEventArgs args)
+            ScanningComplete += delegate
             {
-                ScanningComplete(this, args);
             };
-            _dataSourceManager.TransferImage += delegate(object sender, TransferImageEventArgs args)
+            TransferImage += delegate
             {
-                TransferImage(this, args);
+            };
+
+            _dataSourceManager = new DataSourceManager( DataSourceManager.DefaultApplicationId, messageHook );
+            _dataSourceManager.ScanningComplete += delegate ( object sender, ScanningCompleteEventArgs args )
+            {
+                ScanningComplete( this, args );
+            };
+            _dataSourceManager.TransferImage += delegate ( object sender, TransferImageEventArgs args )
+            {
+                TransferImage( this, args );
             };
         }
 
@@ -39,9 +37,9 @@ namespace TwainDotNet
         /// <summary>
         /// Starts scanning.
         /// </summary>
-        public void StartScanning(ScanSettings settings)
+        public bool StartScanning( ScanSettings settings )
         {
-            _dataSourceManager.StartScan(settings);
+            return _dataSourceManager.StartScan( settings );
         }
 
         /// <summary>
@@ -56,14 +54,14 @@ namespace TwainDotNet
         /// Selects a source based on the product name string.
         /// </summary>
         /// <param name="sourceName">The source product name.</param>
-        public void SelectSource(string sourceName)
+        public void SelectSource( string sourceName )
         {
             var source = DataSource.GetSource(
                 sourceName,
                 _dataSourceManager.ApplicationId,
-                _dataSourceManager.MessageHook);
+                _dataSourceManager.MessageHook );
 
-            _dataSourceManager.SelectSource(source);
+            _dataSourceManager.SelectSource( source );
         }
 
         /// <summary>
@@ -73,7 +71,7 @@ namespace TwainDotNet
         {
             get
             {
-                using (var source = DataSource.GetDefault(_dataSourceManager.ApplicationId, _dataSourceManager.MessageHook))
+                using( var source = DataSource.GetDefault( _dataSourceManager.ApplicationId, _dataSourceManager.MessageHook ) )
                 {
                     return source.SourceId.ProductName;
                 }
@@ -90,11 +88,11 @@ namespace TwainDotNet
                 var result = new List<string>();
                 var sources = DataSource.GetAllSources(
                     _dataSourceManager.ApplicationId,
-                    _dataSourceManager.MessageHook);
+                    _dataSourceManager.MessageHook );
 
-                foreach (var source in sources)
+                foreach( var source in sources )
                 {
-                    result.Add(source.SourceId.ProductName);
+                    result.Add( source.SourceId.ProductName );
                     source.Dispose();
                 }
 
@@ -110,6 +108,26 @@ namespace TwainDotNet
         public void DebugCapabilities()
         {
             _dataSourceManager.DebugCapabilities();
+        }
+
+        ~Twain()
+        {
+            Dispose( false );
+        }
+
+        public void Dispose()
+        {
+            Dispose( true );
+            GC.SuppressFinalize( this );
+        }
+
+        protected virtual void Dispose( bool disposing )
+        {
+            if( disposing )
+            {
+                _dataSourceManager.Dispose();
+                _dataSourceManager = null;
+            }
         }
     }
 }

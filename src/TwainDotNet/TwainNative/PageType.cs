@@ -1,6 +1,6 @@
 ﻿namespace TwainDotNet.TwainNative
 {
-    public enum PageType
+    public enum PageType : ushort
     {
         None = 0,
 

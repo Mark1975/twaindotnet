@@ -7,7 +7,7 @@ namespace TwainDotNet.TwainNative
     /// <summary>
     /// Twain spec ICAP_ORIENTATION values.
     /// </summary>
-    public enum Orientation
+    public enum Orientation : ushort
     {
         /// <summary>
         /// Default is zero rotation, same as Portrait.

@@ -28,9 +28,12 @@ namespace TestApp
             _twain = new Twain(new WinFormsWindowMessageHook(this));
             _twain.TransferImage += delegate(Object sender, TransferImageEventArgs args)
             {
-                if (args.Image != null)
+                if (args.HBitmap != IntPtr.Zero)
                 {
-                    pictureBox1.Image = args.Image;
+                    using( var renderer = new TwainDotNet.Win32.BitmapRenderer( args.HBitmap ) )
+                    {
+                        pictureBox1.Image = renderer.RenderToBitmap();
+                    }
 
                     widthLabel.Text = "Width: " + pictureBox1.Image.Width;
                     heightLabel.Text = "Height: " + pictureBox1.Image.Height;

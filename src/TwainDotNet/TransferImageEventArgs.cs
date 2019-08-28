@@ -5,7 +5,7 @@ namespace TwainDotNet
 {
     public class TransferImageEventArgs : EventArgs
     {
-        public Bitmap Image
+        public IntPtr HBitmap
         {
             get; private set;
         }
@@ -18,9 +18,9 @@ namespace TwainDotNet
             get; set;
         }
 
-        public TransferImageEventArgs( Bitmap image, bool continueScanning )
+        public TransferImageEventArgs( IntPtr hbitmap, bool continueScanning )
         {
-            Image = image;
+            HBitmap = hbitmap;
             ContinueScanning = continueScanning;
         }
         public TransferImageEventArgs( MemoryTransferData memoryTransferData, bool continueScanning )
