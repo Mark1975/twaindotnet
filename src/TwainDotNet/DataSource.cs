@@ -40,6 +40,11 @@ namespace TwainDotNet
             get; set;
         } = 0;
 
+		public bool KeepOpen
+		{
+			get; set;
+		}
+
         public void NegotiateTransferCount( ScanSettings scanSettings )
         {
             try
@@ -701,6 +706,7 @@ namespace TwainDotNet
             ui.ShowUI = ( short )( !uiControllable || settings.ShowTwainUI ? 1 : 0 );
             ui.ModalUI = 1;
             ui.ParentHand = _messageHook.WindowHandle;
+			this.KeepOpen = settings.KeepOpen;
 
             var result = Twain32Native.DsUserInterface(
                 _applicationId,

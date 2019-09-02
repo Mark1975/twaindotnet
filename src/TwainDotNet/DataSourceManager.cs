@@ -214,8 +214,11 @@ namespace TwainDotNet
                     {
                         exception = e;
                     }
-                    CloseDsAndCompleteScanning( exception );
-                    break;
+					if( !DataSource.KeepOpen || exception != null )
+					{
+						CloseDsAndCompleteScanning( exception );
+					}
+					break;
 
                 case Message.CloseDS:
                 case Message.CloseDSOK:
@@ -309,7 +312,7 @@ namespace TwainDotNet
 								DataSource.State = 5;
 							}
 
-							log.Debug( $"EndXfer State: {DataSource.State}." );
+							log.Debug( $"EndXfer State: {DataSource.State} pendingTransfer.Count={pendingTransfer.Count}." );
 						}
 					}
 
