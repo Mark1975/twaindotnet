@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace TwainDotNet.TwainNative
 {
     [StructLayout(LayoutKind.Sequential, Pack = 2, CharSet = CharSet.Ansi)]
-    public class Identity
+    internal class Identity
     {
         public int Id;
         public TwainVersion Version;

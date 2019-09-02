@@ -6,10 +6,18 @@ using TwainDotNet.TwainNative;
 
 namespace TwainDotNet.Win32
 {
+	/// <summary>
+	/// Image parser.
+	/// </summary>
     public static class ImageParser
     {
-		static ILog log = LogManager.GetLogger( typeof( ImageParser ) );
+		static readonly ILog log = LogManager.GetLogger( typeof( ImageParser ) );
 
+		/// <summary>
+		/// Parse image.
+		/// </summary>
+		/// <param name="memoryTransferData">The memory transfer data.</param>
+		/// <returns></returns>
 		public static System.Drawing.Image ParseImage( MemoryTransferData memoryTransferData )
         {
             if( memoryTransferData == null )
@@ -102,7 +110,6 @@ namespace TwainDotNet.Win32
             {
                 // Free the memory...
                 Marshal.FreeHGlobal( intptrTiff );
-                intptrTiff = IntPtr.Zero;
             }
         }
 
@@ -168,7 +175,6 @@ namespace TwainDotNet.Win32
             {
                 // Free the memory...
                 Marshal.FreeHGlobal( intptrTiff );
-                intptrTiff = IntPtr.Zero;
             }
         }
 

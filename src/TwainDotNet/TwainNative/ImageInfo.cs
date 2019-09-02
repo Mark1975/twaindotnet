@@ -6,7 +6,8 @@ using System.Runtime.InteropServices;
 namespace TwainDotNet.TwainNative
 {
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
-    public class ImageInfo
+#pragma warning disable 1591
+	public class ImageInfo
     {
         public Fix32 XResolution;
         public Fix32 YResolution;
@@ -37,4 +38,5 @@ namespace TwainDotNet.TwainNative
 				Compression );
 		}
 	}
+#pragma warning restore 1591
 }

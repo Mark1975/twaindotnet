@@ -14,7 +14,7 @@ namespace TwainDotNet.TwainNative
     ///    TW_UINT8   ItemList[1];  /* Array of ItemType values starts here       */
     /// } TW_ENUMERATION, FAR * pTW_ENUMERATION;
     /// </summary>
-    public class CapabilityEnumValue
+    internal class CapabilityEnumValue
     {
         public TwainType TwainType { get; set; }
         public int ItemCount { get; set; }
@@ -22,11 +22,13 @@ namespace TwainDotNet.TwainNative
         public int CurrentIndex { get; set; }
         public int DefaultIndex { get; set; }
 
+		/*
 #pragma warning disable 169
         /// <summary>
         /// The start of the array values
         /// </summary>
         byte _valueStart;
 #pragma warning restore 169
+*/
     }
 }

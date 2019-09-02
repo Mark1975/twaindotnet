@@ -59,7 +59,7 @@
             this.selectSource.TabIndex = 0;
             this.selectSource.Text = "Select Source";
             this.selectSource.UseVisualStyleBackColor = true;
-            this.selectSource.Click += new System.EventHandler(this.selectSource_Click);
+            this.selectSource.Click += new System.EventHandler(this.SelectSource_Click);
             // 
             // scan
             // 
@@ -69,7 +69,7 @@
             this.scan.TabIndex = 1;
             this.scan.Text = "Scan";
             this.scan.UseVisualStyleBackColor = true;
-            this.scan.Click += new System.EventHandler(this.scan_Click);
+            this.scan.Click += new System.EventHandler(this.Scan_Click);
             // 
             // pictureBox1
             // 
@@ -109,7 +109,7 @@
             this.saveButton.TabIndex = 2;
             this.saveButton.Text = "Save";
             this.saveButton.UseVisualStyleBackColor = true;
-            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            this.saveButton.Click += new System.EventHandler(this.SaveButton_Click);
             // 
             // blackAndWhiteCheckBox
             // 
@@ -147,7 +147,7 @@
             this.diagnosticsButton.TabIndex = 3;
             this.diagnosticsButton.Text = "Diagnostics";
             this.diagnosticsButton.UseVisualStyleBackColor = true;
-            this.diagnosticsButton.Click += new System.EventHandler(this.diagnostics_Click);
+            this.diagnosticsButton.Click += new System.EventHandler(this.Diagnostics_Click);
             // 
             // checkBoxArea
             // 

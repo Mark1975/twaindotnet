@@ -15,16 +15,17 @@ namespace TwainDotNet.TwainNative
     /// } TW_ARRAY, FAR * pTW_ARRAY;
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
-    public class CapabilityArrayValue
+    internal class CapabilityArrayValue
     {
         public TwainType TwainType { get; set; }
         public int ItemCount { get; set; }
 
+		/*
         /// <summary>
         /// The start of the array values
         /// </summary>
         byte _valueStart;
-
+		*/
 
     }
 }

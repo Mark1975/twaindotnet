@@ -6,19 +6,26 @@ using log4net;
 
 namespace TwainDotNet.Win32
 {
+	/// <summary>
+	/// Bitmap renderer.
+	/// </summary>
     public class BitmapRenderer : IDisposable
     {
         /// <summary>
         /// The logger for this class.
         /// </summary>
-        static ILog log = LogManager.GetLogger(typeof(BitmapRenderer));
+        static readonly ILog log = LogManager.GetLogger(typeof(BitmapRenderer));
 
-        IntPtr _dibHandle;
-        IntPtr _bitmapPointer;
-        IntPtr _pixelInfoPointer;
+        readonly IntPtr _dibHandle;
+        readonly IntPtr _bitmapPointer;
+        readonly IntPtr _pixelInfoPointer;
         Rectangle _rectangle;
-        BitmapInfoHeader _bitmapInfo;
+        readonly BitmapInfoHeader _bitmapInfo;
 
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		/// <param name="dibHandle">The dib handle.</param>
         public BitmapRenderer(IntPtr dibHandle)
         {
             _dibHandle = dibHandle;
@@ -53,11 +60,18 @@ namespace TwainDotNet.Win32
             _pixelInfoPointer = new IntPtr(pixelInfoPointer);
         }
 
+		/// <summary>
+		/// Finalizer.
+		/// </summary>
         ~BitmapRenderer()
         {
             Dispose(false);
         }
 
+		/// <summary>
+		/// Render to bitmap.
+		/// </summary>
+		/// <returns></returns>
         public Bitmap RenderToBitmap()
         {
             Bitmap bitmap = new Bitmap(_rectangle.Width, _rectangle.Height);
@@ -89,12 +103,19 @@ namespace TwainDotNet.Win32
             return (float)Math.Round(dotsPerInch, 2);
         }
 
+		/// <summary>
+		/// Dispose.
+		/// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+		/// <summary>
+		/// Dispose.
+		/// </summary>
+		/// <param name="disposing">Whether disposing.</param>
         protected virtual void Dispose(bool disposing)
         {
             Kernel32Native.GlobalUnlock(_dibHandle);

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.CodeDom.Compiler;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Units : ushort
+#pragma warning disable 1591
+	[GeneratedCode( "TwainH", "1.0" )]
+	public enum Units : ushort
     {
         Inches = 0,
 
@@ -20,4 +20,5 @@ namespace TwainDotNet.TwainNative
 
         Millimeters = 6
     }
+#pragma warning restore 1591
 }

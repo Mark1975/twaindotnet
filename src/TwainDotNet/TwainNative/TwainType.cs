@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum TwainType : short
+    internal enum TwainType : short
     {
         Int8 = 0x0000,
         Int16 = 0x0001,

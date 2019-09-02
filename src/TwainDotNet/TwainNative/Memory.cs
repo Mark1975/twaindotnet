@@ -5,9 +5,10 @@ using System.Runtime.InteropServices;
 
 namespace TwainDotNet.TwainNative
 {
+#pragma warning disable 1591
 
-    // NOTE: Memory has to be a *struct* not *class* because it's embedded directly in other classes/structs
-    [StructLayout( LayoutKind.Sequential, Pack = 2 )]
+	// NOTE: Memory has to be a *struct* not *class* because it's embedded directly in other classes/structs
+	[StructLayout( LayoutKind.Sequential, Pack = 2 )]
     public struct Memory
     {
         public MemoryFlags Flags;
@@ -33,5 +34,6 @@ namespace TwainDotNet.TwainNative
         Pointer = 0x8,
         Handle = 0x10,
     }
+#pragma warning restore 1591
 
 }

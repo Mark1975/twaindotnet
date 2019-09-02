@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.Drawing;
-using System.Diagnostics;
+﻿using System.Runtime.InteropServices;
 
 namespace TwainDotNet.Win32
 {
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
-    public class BitmapInfoHeader
+    internal class BitmapInfoHeader
     {
         public int Size;
         public int Width;

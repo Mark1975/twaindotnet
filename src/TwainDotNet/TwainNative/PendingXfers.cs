@@ -16,7 +16,7 @@ namespace TwainDotNet.TwainNative
     /// } TW_PENDINGXFERS, FAR *pTW_PENDINGXFERS;
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
-    public class PendingXfers
+    internal class PendingXfers
     {
         public short Count;
         public int Eoj;

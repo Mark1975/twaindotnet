@@ -4,10 +4,11 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    /// <summary>
-    /// Twain spec ICAP_ORIENTATION values.
-    /// </summary>
-    public enum Orientation : ushort
+	/// <summary>
+	/// Twain spec ICAP_ORIENTATION values.
+	/// </summary>
+#pragma warning disable 1591
+	public enum Orientation : ushort
     {
         /// <summary>
         /// Default is zero rotation, same as Portrait.
@@ -26,4 +27,5 @@ namespace TwainDotNet.TwainNative
         AutoText = 5,
         AutoPicture = 6
     }
+#pragma warning restore 1591
 }

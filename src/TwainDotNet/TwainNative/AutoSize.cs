@@ -6,8 +6,19 @@ namespace TwainDotNet.TwainNative
     /// </summary>
     public enum AutoSize
     {
-        None = 0, 
-        Auto = 1, 
+		/// <summary>
+		/// None.
+		/// </summary>
+        None = 0,
+		
+		/// <summary>
+		/// Auto.
+		/// </summary>
+        Auto = 1,
+		
+		/// <summary>
+		/// Current.
+		/// </summary>
         Current = 2,
     }
 }

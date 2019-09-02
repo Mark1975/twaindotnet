@@ -9,7 +9,7 @@ namespace TwainDotNet.TwainNative
     /// TW_VERSION
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 2, CharSet = CharSet.Ansi)]
-    public struct TwainVersion
+    internal struct TwainVersion
     {
         public short MajorNum;
         public short MinorNum;

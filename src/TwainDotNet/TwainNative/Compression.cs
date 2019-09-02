@@ -1,10 +1,14 @@
 ﻿
+using System.CodeDom.Compiler;
+
 namespace TwainDotNet.TwainNative
 {
     /// <summary>
     /// Twain spec ICAP_COMPRESSION values.
     /// </summary>
-    public enum Compression : ushort
+	[GeneratedCode( "TwainH", "1.0")]
+#pragma warning disable 1591
+	public enum Compression : ushort
     {
         None = 0,
         PackBits = 1,
@@ -21,4 +25,5 @@ namespace TwainDotNet.TwainNative
         BitFields = 12   /* Added 1.8 */
 
     }
+#pragma warning restore 1591
 }

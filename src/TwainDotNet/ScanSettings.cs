@@ -1,13 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using TwainDotNet.TwainNative;
 
 namespace TwainDotNet
 {
+	/// <summary>
+	/// Scan settings.
+	/// </summary>
 	public class ScanSettings : INotifyPropertyChanged
 	{
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
 		public ScanSettings()
 		{
 		}
@@ -19,7 +22,10 @@ namespace TwainDotNet
 		/// </summary>
 		public bool ShowTwainUI
 		{
-			get { return _showTwainUI; }
+			get
+			{
+				return _showTwainUI;
+			}
 			set
 			{
 				if( value != _showTwainUI )
@@ -41,7 +47,10 @@ namespace TwainDotNet
 		/// <value><c>true</c> if [show progress indicator ui]; otherwise, <c>false</c>.</value>
 		public bool? ShowProgressIndicatorUI
 		{
-			get { return _showProgressIndicatorUI; }
+			get
+			{
+				return _showProgressIndicatorUI;
+			}
 			set
 			{
 				if( value != _showProgressIndicatorUI )
@@ -59,7 +68,10 @@ namespace TwainDotNet
 		/// </summary>
 		public bool? UseDocumentFeeder
 		{
-			get { return _useDocumentFeeder; }
+			get
+			{
+				return _useDocumentFeeder;
+			}
 			set
 			{
 				if( value != _useDocumentFeeder )
@@ -78,7 +90,10 @@ namespace TwainDotNet
 		/// </summary>
 		public bool? UseAutoFeeder
 		{
-			get { return _useAutoFeeder; }
+			get
+			{
+				return _useAutoFeeder;
+			}
 			set
 			{
 				if( value != _useAutoFeeder )
@@ -96,7 +111,10 @@ namespace TwainDotNet
 		/// </summary>
 		public bool? UseAutoScanCache
 		{
-			get { return _useAutoScanCache; }
+			get
+			{
+				return _useAutoScanCache;
+			}
 			set
 			{
 				if( value != _useAutoScanCache )
@@ -114,7 +132,10 @@ namespace TwainDotNet
 		/// </summary>
 		public bool AbortWhenNoPaperDetectable
 		{
-			get { return _abortWhenNoPaperDetectable; }
+			get
+			{
+				return _abortWhenNoPaperDetectable;
+			}
 			set
 			{
 				if( value != _abortWhenNoPaperDetectable )
@@ -132,7 +153,10 @@ namespace TwainDotNet
 		/// </summary>
 		public short? TransferCount
 		{
-			get { return _transferCount; }
+			get
+			{
+				return _transferCount;
+			}
 			set
 			{
 				if( value != _transferCount )
@@ -149,8 +173,14 @@ namespace TwainDotNet
 		/// </summary>
 		public bool ShouldTransferAllPages
 		{
-			get { return _transferCount == TransferAllPages; }
-			set { TransferCount = value ? TransferAllPages : ( short )1; }
+			get
+			{
+				return _transferCount == TransferAllPages;
+			}
+			set
+			{
+				TransferCount = value ? TransferAllPages : ( short )1;
+			}
 		}
 
 		bool? _useDuplex;
@@ -160,7 +190,10 @@ namespace TwainDotNet
 		/// </summary>
 		public bool? UseDuplex
 		{
-			get { return _useDuplex; }
+			get
+			{
+				return _useDuplex;
+			}
 			set
 			{
 				if( value != _useDuplex )
@@ -172,10 +205,16 @@ namespace TwainDotNet
 		}
 
 		AreaSettings _area;
+		/// <summary>
+		/// Gets or sets the area.
+		/// </summary>
 
 		public AreaSettings Area
 		{
-			get { return _area; }
+			get
+			{
+				return _area;
+			}
 			set
 			{
 				if( value != _area )
@@ -188,6 +227,9 @@ namespace TwainDotNet
 
 		TwainNative.TransferMechanism? _dataTransferMode;
 
+		/// <summary>
+		/// Gets or sets the data transfer mode.
+		/// </summary>
 		public TwainNative.TransferMechanism? DataTransferMode
 		{
 			get
@@ -205,6 +247,9 @@ namespace TwainDotNet
 		}
 
 		private Units? _units;
+		/// <summary>
+		/// Gets or sets the units.
+		/// </summary>
 		public Units? Units
 		{
 			get
@@ -218,6 +263,9 @@ namespace TwainDotNet
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the units options.
+		/// </summary>
 		public Units[] UnitsOptions
 		{
 			get;
@@ -396,7 +444,7 @@ namespace TwainDotNet
 			}
 		}
 
-		public bool _keepOpen;
+		private bool _keepOpen;
 		/// <summary>
 		/// Gets or sets the Page Size.
 		/// </summary>
@@ -419,38 +467,60 @@ namespace TwainDotNet
 
 		#region INotifyPropertyChanged Members
 
-		protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
+		/// <summary>
+		/// On property changed.
+		/// </summary>
+		/// <param name="propertyName">The property name.</param>
+		protected void OnPropertyChanged( string propertyName )
+		{
+			PropertyChanged( this, new PropertyChangedEventArgs( propertyName ) );
+		}
 
-        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+		/// <summary>
+		/// Property changed.
+		/// </summary>
+		public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
-        #endregion
+		#endregion
 
-        /// <summary>
-        /// Default scan settings.
-        /// </summary>
-        public static readonly ScanSettings Default = new ScanSettings()
-        {
-            ColourSetting = ColourSetting.Colour,
-            Dpi = 300,
-        };
+		/// <summary>
+		/// Default scan settings.
+		/// </summary>
+		public static readonly ScanSettings Default = new ScanSettings()
+		{
+			ColourSetting = ColourSetting.Colour,
+			Dpi = 300,
+		};
 
-        /// <summary>
-        /// The value to set to scan all available pages.
-        /// </summary>
-        public const short TransferAllPages = -1;
-    }
+		/// <summary>
+		/// The value to set to scan all available pages.
+		/// </summary>
+		public const short TransferAllPages = -1;
+	}
 
-    public enum ColourSetting
-    {
-        Default,
+	/// <summary>
+	/// Colour setting.
+	/// </summary>
+	public enum ColourSetting
+	{
+		/// <summary>
+		/// Default.
+		/// </summary>
+		Default,
 
-        BlackAndWhite,
+		/// <summary>
+		/// Black and white.
+		/// </summary>
+		BlackAndWhite,
 
-        GreyScale,
+		/// <summary>
+		/// Grey scale.
+		/// </summary>
+		GreyScale,
 
-        Colour
-    }
+		/// <summary>
+		/// Colour.
+		/// </summary>
+		Colour
+	}
 }

@@ -4,8 +4,10 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Language : short
+#pragma warning disable 1591
+	public enum Language : short
     {
         USA = 13
     }
+#pragma warning restore 1591
 }

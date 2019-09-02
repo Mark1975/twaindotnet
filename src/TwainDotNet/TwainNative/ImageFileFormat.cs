@@ -1,10 +1,14 @@
 ﻿
+using System.CodeDom.Compiler;
+
 namespace TwainDotNet.TwainNative 
 {
-    /// <summary>
-    /// Twain spec ICAP_IMAGEFILEFORMAT values.
-    /// </summary>
-    public enum ImageFileFormat : ushort
+	/// <summary>
+	/// Twain spec ICAP_IMAGEFILEFORMAT values.
+	/// </summary>
+	[GeneratedCode( "TwainH", "1.0" )]
+#pragma warning disable 1591
+	public enum ImageFileFormat : ushort
     {
         Tiff = 0,       /* Tagged Image File Format     */
         Pict = 1,       /* Macintosh PICT               */
@@ -23,5 +27,6 @@ namespace TwainDotNet.TwainNative
         PdfA = 15,      /* 2.0 Adobe PDF/A, Version 1*/
         PdfA2 = 16      /* 2.1 Adobe PDF/A, Version 2*/
     }
+#pragma warning restore 1591
 }
 

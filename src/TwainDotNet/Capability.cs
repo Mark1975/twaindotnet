@@ -4,16 +4,16 @@ using log4net;
 
 namespace TwainDotNet
 {
-    public class Capability
+    internal class Capability
     {
         /// <summary>
         /// The logger for this class.
         /// </summary>
-        static ILog log = LogManager.GetLogger( typeof( Capability ) );
+        static readonly ILog log = LogManager.GetLogger( typeof( Capability ) );
 
-        Identity _applicationId;
-        Identity _sourceId;
-        Capabilities _capability;
+        readonly Identity _applicationId;
+        readonly Identity _sourceId;
+        readonly Capabilities _capability;
 
         public Capability( Capabilities capability, Identity applicationId, Identity sourceId )
         {
@@ -30,7 +30,7 @@ namespace TwainDotNet
                 return basicCapabilityResult1;
             }
 
-            if( result is EnumCapabilityResult enumCapabilityResult )
+            if( result is EnumCapabilityResult )
             {
                 result = GetValueInternal( Message.GetCurrent );
                 if( result is BasicCapabilityResult basicCapabilityResult2 )
@@ -39,7 +39,7 @@ namespace TwainDotNet
                 }
             }
 
-			if( result is RangeCapabilityResult rangeCapabilityResult )
+			if( result is RangeCapabilityResult )
 			{
 				result = GetValueInternal( Message.GetCurrent );
 				if( result is BasicCapabilityResult basicCapabilityResult2 )

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.Serialization;
 using TwainDotNet.TwainNative;
 
 namespace TwainDotNet
 {
-    public class TwainException : ApplicationException
+    internal class TwainException : ApplicationException
     {
         public TwainException()
             : this(null, null)

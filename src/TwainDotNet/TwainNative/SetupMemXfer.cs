@@ -14,7 +14,7 @@ namespace TwainDotNet.TwainNative
     /// } TW_SETUPMEMXFER, FAR* pTW_SETUPMEMXFER;
     /// </summary>
     [StructLayout( LayoutKind.Sequential, Pack = 2 )]
-    public class SetupMemXfer
+    internal class SetupMemXfer
     {
         public UInt32 MinBufSize;
         public UInt32 MaxBufSize;

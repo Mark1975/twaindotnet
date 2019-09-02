@@ -5,18 +5,19 @@ Imports TwainDotNet.TwainNative
 Imports TwainDotNet.WinFroms
 
 Public Class MainForm
+	ReadOnly areaSettings As New AreaSettings(0.1F, 5.7F, 0.1F + 2.6F, 5.7F + 2.6F)
 
-    Dim areaSettings As New AreaSettings(0.1F, 5.7F, 0.1F + 2.6F, 5.7F + 2.6F)
+#Disable Warning IDE0069 ' Disposable fields should be disposed
+	''' <summary>
+	''' Twain scanning library
+	''' </summary>
+	ReadOnly twain As Twain
+#Enable Warning IDE0069 ' Disposable fields should be disposed
 
-    ''' <summary>
-    ''' Twain scanning library
-    ''' </summary>
-    Dim twain As Twain
-
-    ''' <summary>
-    ''' The current scan settings.
-    ''' </summary>
-    Dim settings As ScanSettings
+	''' <summary>
+	''' The current scan settings.
+	''' </summary>
+	Dim settings As ScanSettings
 
     ''' <summary>
     ''' The current list of images (only the latest displayed in the Form).
@@ -52,68 +53,80 @@ Public Class MainForm
         AddHandler twain.ScanningComplete,
             Sub(sender As Object, e As TwainDotNet.ScanningCompleteEventArgs)
                 Enabled = True
-            End Sub
-    End Sub
+			End Sub
 
-    Private Sub selectSource_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles selectSource.Click
-        ' Show the "select scanning source" dialog
-        twain.SelectSource()
-    End Sub
+		AddHandler FormClosed, AddressOf MainForm_FormClosed
+	End Sub
 
-    Private Sub scan_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles scan.Click
-        ' Disable the Form until scanning completes
-        Enabled = False
+	Private Sub MainForm_FormClosed(ByVal sender As System.Object, ByVal e As FormClosedEventArgs)
+		RemoveHandler FormClosed, AddressOf MainForm_FormClosed
 
-        ' Clear off any images from the last run
-        images = New List(Of System.Drawing.Bitmap)
+		If (Not (twain Is Nothing)) Then
+			twain.Dispose()
+		End If
+	End Sub
 
-        ' Grab the current settings
-        settings = New ScanSettings()
-        settings.UseDocumentFeeder = useAdfCheckBox.Checked
-        settings.ShowTwainUI = useUICheckBox.Checked
-        settings.ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked
-        settings.UseDuplex = useDuplexCheckBox.Checked
-        If (blackAndWhiteCheckBox.Checked) Then
-            settings.ColourSetting = ColourSetting.BlackAndWhite
-            settings.Dpi = 200
-        Else
-            settings.ColourSetting = ColourSetting.Colour
-            settings.Dpi = 300
-        End If
-        If (checkBoxArea.Checked) Then
-            settings.Units = Units.Centimeters
-            settings.Area = areaSettings
-        End If
-        settings.ShouldTransferAllPages = True
+	Private Sub SelectSource_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles selectSource.Click
+		' Show the "select scanning source" dialog
+		twain.SelectSource()
+	End Sub
 
-        settings.AutomaticRotate = autoRotateCheckBox.Checked
-        settings.AutomaticBorderDetection = autoDetectBorderCheckBox.Checked
+	Private Sub Scan_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles scan.Click
+		' Disable the Form until scanning completes
+		Enabled = False
 
-        Try
-            ' Start scanning. Depending on the settings above dialogs from the scanner driver may be displayed.
-            twain.StartScanning(settings)
+		' Clear off any images from the last run
+		images = New List(Of System.Drawing.Bitmap)
 
-        Catch ex As TwainException
-            MessageBox.Show(ex.Message)
-            Enabled = True
-        End Try
-    End Sub
+		' Grab the current settings
+		settings = New ScanSettings With {
+			.UseDocumentFeeder = useAdfCheckBox.Checked,
+			.ShowTwainUI = useUICheckBox.Checked,
+			.ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked,
+			.UseDuplex = useDuplexCheckBox.Checked
+		}
+		If (blackAndWhiteCheckBox.Checked) Then
+			settings.ColourSetting = ColourSetting.BlackAndWhite
+			settings.Dpi = 200
+		Else
+			settings.ColourSetting = ColourSetting.Colour
+			settings.Dpi = 300
+		End If
+		If (checkBoxArea.Checked) Then
+			settings.Units = Units.Centimeters
+			settings.Area = areaSettings
+		End If
+		settings.ShouldTransferAllPages = True
 
-    Private Sub saveButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles saveButton.Click
+		settings.AutomaticRotate = autoRotateCheckBox.Checked
+		settings.AutomaticBorderDetection = autoDetectBorderCheckBox.Checked
 
-        If (Not (pictureBox1.Image Is Nothing)) Then
-            Dim sfd As New SaveFileDialog()
+		Try
+			' Start scanning. Depending on the settings above dialogs from the scanner driver may be displayed.
+			twain.StartScanning(settings)
 
-            ' TODO: save each image in "images" as a page in a TIFF file
+		Catch ex As Exception
+			MessageBox.Show(ex.Message)
+			Enabled = True
+		End Try
+	End Sub
 
-            If sfd.ShowDialog() = DialogResult.OK Then
-                pictureBox1.Image.Save(sfd.FileName)
-            End If
-        End If
-    End Sub
+	Private Sub SaveButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles saveButton.Click
 
-    Private Sub diagnosticsButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles diagnosticsButton.Click
-        ' Dump out diagnostics from the current source
-        Dim diagnostics As New Diagnostics(New WinFormsWindowMessageHook(Me))
-    End Sub
+		If (Not (pictureBox1.Image Is Nothing)) Then
+			Using sfd As New SaveFileDialog()
+
+				' TODO: save each image in "images" as a page in a TIFF file
+
+				If sfd.ShowDialog() = DialogResult.OK Then
+					pictureBox1.Image.Save(sfd.FileName)
+				End If
+			End Using
+		End If
+	End Sub
+
+	Private Sub DiagnosticsButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles diagnosticsButton.Click
+		' Dump out diagnostics from the current source
+		Dim diagnostics As New Diagnostics(New WinFormsWindowMessageHook(Me))
+	End Sub
 End Class

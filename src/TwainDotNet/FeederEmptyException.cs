@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.Serialization;
 
 namespace TwainDotNet
 {
-    public class FeederEmptyException : TwainException
+    internal class FeederEmptyException : TwainException
     {
         public FeederEmptyException()
             : this(null, null)

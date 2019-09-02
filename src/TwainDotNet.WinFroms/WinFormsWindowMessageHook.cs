@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows.Forms;
 
 namespace TwainDotNet.WinFroms
@@ -10,14 +8,23 @@ namespace TwainDotNet.WinFroms
     /// </summary>
     public class WinFormsWindowMessageHook : IWindowsMessageHook, IMessageFilter
     {
-        IntPtr _windowHandle;
+        readonly IntPtr _windowHandle;
         bool _usingFilter;
 
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		/// <param name="window">The window.</param>
         public WinFormsWindowMessageHook(Form window)
         {
             _windowHandle = window.Handle;
         }
 
+		/// <summary>
+		/// Pre filter message.
+		/// </summary>
+		/// <param name="m">The message.</param>
+		/// <returns></returns>
         public bool PreFilterMessage(ref Message m)
         {
             if (FilterMessageCallback != null)
@@ -30,8 +37,14 @@ namespace TwainDotNet.WinFroms
             return false;
         }
 
+		/// <summary>
+		/// Gets the window handle.
+		/// </summary>
         public IntPtr WindowHandle { get { return _windowHandle; } }
 
+		/// <summary>
+		/// Gets or sets whether to use the filter.
+		/// </summary>
         public bool UseFilter
         {
             get
@@ -54,6 +67,9 @@ namespace TwainDotNet.WinFroms
             }
         }
 
+		/// <summary>
+		/// Gets or sets the filter message callback.
+		/// </summary>
         public FilterMessage FilterMessageCallback { get; set; }        
     }
 }

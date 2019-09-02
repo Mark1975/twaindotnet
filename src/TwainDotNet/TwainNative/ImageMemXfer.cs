@@ -24,6 +24,7 @@ namespace TwainDotNet.TwainNative
 	/// </summary>
 
 	[StructLayout( LayoutKind.Sequential, Pack = 2 )]
+#pragma warning disable 1591
 	public class ImageMemXfer
 	{
 		public Compression Compression;
@@ -48,4 +49,5 @@ namespace TwainDotNet.TwainNative
 				BytesWritten );
 		}
 	}
+#pragma warning restore 1591
 }

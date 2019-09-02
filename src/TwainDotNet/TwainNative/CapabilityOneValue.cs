@@ -15,7 +15,7 @@ namespace TwainDotNet.TwainNative
     /// } TW_ONEVALUE, FAR * pTW_ONEVALUE;
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
-    public class CapabilityOneValue
+    internal class CapabilityOneValue
     {
         public CapabilityOneValue(TwainType twainType, int value)
         {

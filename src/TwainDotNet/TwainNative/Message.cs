@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TwainDotNet.TwainNative
+﻿namespace TwainDotNet.TwainNative
 {
-    public enum Message : short
+    internal enum Message : short
     {				
         Null = 0x0000,
         Get = 0x0001,

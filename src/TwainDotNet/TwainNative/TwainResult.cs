@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TwainDotNet.TwainNative
+﻿namespace TwainDotNet.TwainNative
 {
-    public enum TwainResult : short
+    internal enum TwainResult : short
     {									
         Success = 0x0000,
         Failure = 0x0001,

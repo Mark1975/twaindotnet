@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace TwainDotNet.Win32
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public struct WindowsMessage
+    internal struct WindowsMessage
     {
         public IntPtr hwnd;
         public int message;

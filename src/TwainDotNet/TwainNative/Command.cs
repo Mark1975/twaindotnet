@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Command
+    internal enum Command
     {
         Not = -1,
         Null = 0,

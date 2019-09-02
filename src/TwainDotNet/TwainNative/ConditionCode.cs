@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TwainDotNet.TwainNative
+﻿namespace TwainDotNet.TwainNative
 {
-    public enum ConditionCode : short
+    internal enum ConditionCode : short
     {
         Success = 0,
 

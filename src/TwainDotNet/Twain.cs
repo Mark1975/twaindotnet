@@ -3,10 +3,17 @@ using System.Collections.Generic;
 
 namespace TwainDotNet
 {
+	/// <summary>
+	/// Twain.
+	/// </summary>
     public class Twain : IDisposable
     {
         DataSourceManager _dataSourceManager;
 
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		/// <param name="messageHook">The message hook.</param>
         public Twain( IWindowsMessageHook messageHook )
         {
             ScanningComplete += delegate
@@ -32,11 +39,15 @@ namespace TwainDotNet
         /// </summary>
         public event EventHandler<ScanningCompleteEventArgs> ScanningComplete;
 
+		/// <summary>
+		/// Notification that an image has been transferred.
+		/// </summary>
         public event EventHandler<TransferImageEventArgs> TransferImage;
 
         /// <summary>
         /// Starts scanning.
         /// </summary>
+		/// <param name="settings">The settings.</param>
         public bool StartScanning( ScanSettings settings )
         {
             return _dataSourceManager.StartScan( settings );
@@ -100,27 +111,44 @@ namespace TwainDotNet
             }
         }
 
+		/// <summary>
+		/// Get current scan settings.
+		/// </summary>
+		/// <returns></returns>
         public ScanSettings GetCurrentScanSettings()
         {
             return _dataSourceManager.GetCurrentScanSettings();
         }
 
+		/// <summary>
+		/// Debug capabilities.
+		/// </summary>
         public void DebugCapabilities()
         {
             _dataSourceManager.DebugCapabilities();
         }
 
+		/// <summary>
+		/// Finalizer.
+		/// </summary>
         ~Twain()
         {
             Dispose( false );
         }
 
+		/// <summary>
+		/// Dispose.
+		/// </summary>
         public void Dispose()
         {
             Dispose( true );
             GC.SuppressFinalize( this );
         }
 
+		/// <summary>
+		/// Dispose.
+		/// </summary>
+		/// <param name="disposing">Whether disposing.</param>
         protected virtual void Dispose( bool disposing )
         {
             if( disposing )

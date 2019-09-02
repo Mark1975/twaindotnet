@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
 
 namespace TwainDotNet.Win32
 {
-    public static class Kernel32Native
+    internal static class Kernel32Native
     {
         [DllImport("kernel32.dll", ExactSpelling = true)]
         internal static extern IntPtr GlobalAlloc(GlobalAllocFlags flags, int size);
@@ -24,7 +22,7 @@ namespace TwainDotNet.Win32
     }
 
     [Flags]
-    public enum GlobalAllocFlags : uint
+    internal enum GlobalAllocFlags : uint
     {
         MemFixed = 0,
 

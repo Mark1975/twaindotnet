@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
 
 namespace TwainDotNet.TwainNative
 {
-    public static class Twain32Native
+    internal static class Twain32Native
     {
         /*
          * Twain t/m versie 1.9

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TwainDotNet.TwainNative
+﻿namespace TwainDotNet.TwainNative
 {
-    public enum DataArgumentType : short
+    internal enum DataArgumentType : short
     {
         Null = 0x0000,
         Capability = 0x0001,

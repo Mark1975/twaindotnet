@@ -1,109 +1,119 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using TwainDotNet;
-using System.IO;
 using TwainDotNet.WinFroms;
 
 namespace TestApp
 {
-    using TwainDotNet.TwainNative;
+	using TwainDotNet.TwainNative;
 
-    public partial class MainForm : Form
-    {
-        private static AreaSettings AreaSettings = new AreaSettings(0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
+	public partial class MainForm : Form
+	{
+		private static readonly AreaSettings AreaSettings = new AreaSettings( 0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f );
 
-        Twain _twain;
-        ScanSettings _settings;
+#pragma warning disable IDE0069 // Disposable fields should be disposed
+		readonly Twain _twain;
+#pragma warning restore IDE0069 // Disposable fields should be disposed
+		ScanSettings _settings;
 
-        public MainForm()
-        {
-            InitializeComponent();
+		public MainForm()
+		{
+			InitializeComponent();
 
-            _twain = new Twain(new WinFormsWindowMessageHook(this));
-            _twain.TransferImage += delegate(Object sender, TransferImageEventArgs args)
-            {
-                if (args.HBitmap != IntPtr.Zero)
-                {
-                    using( var renderer = new TwainDotNet.Win32.BitmapRenderer( args.HBitmap ) )
-                    {
-                        pictureBox1.Image = renderer.RenderToBitmap();
-                    }
+			_twain = new Twain( new WinFormsWindowMessageHook( this ) );
+			_twain.TransferImage += delegate ( Object sender, TransferImageEventArgs args )
+			{
+				if( args.HBitmap != IntPtr.Zero )
+				{
+					using( var renderer = new TwainDotNet.Win32.BitmapRenderer( args.HBitmap ) )
+					{
+						pictureBox1.Image = renderer.RenderToBitmap();
+					}
 
-                    widthLabel.Text = "Width: " + pictureBox1.Image.Width;
-                    heightLabel.Text = "Height: " + pictureBox1.Image.Height;
-                }
-            };
-            _twain.ScanningComplete += delegate
-            {
-                Enabled = true;
-            };
-        }
+					widthLabel.Text = "Width: " + pictureBox1.Image.Width;
+					heightLabel.Text = "Height: " + pictureBox1.Image.Height;
+				}
+			};
+			_twain.ScanningComplete += delegate
+			{
+				Enabled = true;
+			};
 
-        private void selectSource_Click(object sender, EventArgs e)
-        {
-            _twain.SelectSource();
-        }
+			this.FormClosed += MainForm_FormClosed;
+		}
 
-        private void scan_Click(object sender, EventArgs e)
-        {
-            Enabled = false;
+		private void MainForm_FormClosed( object sender, FormClosedEventArgs e )
+		{
+			this.FormClosed -= MainForm_FormClosed;
 
-            _settings = new ScanSettings();
-			_settings.Units = Units.Centimeters;
-            _settings.UseDocumentFeeder = useAdfCheckBox.Checked;
-            _settings.ShowTwainUI = useUICheckBox.Checked;
-            _settings.ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked;
-            _settings.UseDuplex = useDuplexCheckBox.Checked;
-            _settings.Area = !checkBoxArea.Checked ? null : AreaSettings;
-            _settings.ShouldTransferAllPages = true;
+			if( _twain != null )
+			{
+				_twain.Dispose();
+			}
+		}
 
-            if( blackAndWhiteCheckBox.Checked )
-            {
-                _settings.ColourSetting = ColourSetting.BlackAndWhite;
-                _settings.Dpi = 200;
-            }
-            else
-            {
-                _settings.ColourSetting = ColourSetting.Colour;
-                _settings.Dpi = 300;
-            }
+		private void SelectSource_Click( object sender, EventArgs e )
+		{
+			_twain.SelectSource();
+		}
 
-            _settings.AutomaticRotate = autoRotateCheckBox.Checked;
-            _settings.AutomaticBorderDetection = autoDetectBorderCheckBox.Checked;
+		private void Scan_Click( object sender, EventArgs e )
+		{
+			Enabled = false;
 
-            try
-            {
-                _twain.StartScanning(_settings);
-            }
-            catch (TwainException ex)
-            {
-                MessageBox.Show(ex.Message);
-                Enabled = true;
-            }
-        }
+			_settings = new ScanSettings
+			{
+				Units = Units.Centimeters,
+				UseDocumentFeeder = useAdfCheckBox.Checked,
+				ShowTwainUI = useUICheckBox.Checked,
+				ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked,
+				UseDuplex = useDuplexCheckBox.Checked,
+				Area = !checkBoxArea.Checked ? null : AreaSettings,
+				ShouldTransferAllPages = true
+			};
 
-        private void saveButton_Click(object sender, EventArgs e)
-        {
-            if (pictureBox1.Image != null)
-            {
-                SaveFileDialog sfd = new SaveFileDialog();
+			if( blackAndWhiteCheckBox.Checked )
+			{
+				_settings.ColourSetting = ColourSetting.BlackAndWhite;
+				_settings.Dpi = 200;
+			}
+			else
+			{
+				_settings.ColourSetting = ColourSetting.Colour;
+				_settings.Dpi = 300;
+			}
 
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    pictureBox1.Image.Save(sfd.FileName);
-                }
-            }
-        }
+			_settings.AutomaticRotate = autoRotateCheckBox.Checked;
+			_settings.AutomaticBorderDetection = autoDetectBorderCheckBox.Checked;
 
-        private void diagnostics_Click(object sender, EventArgs e)
-        {
-            var diagnostics = new Diagnostics(new WinFormsWindowMessageHook(this));
-        }
-    }
+			try
+			{
+				_twain.StartScanning( _settings );
+			}
+			catch( Exception ex )
+			{
+				MessageBox.Show( ex.Message );
+				Enabled = true;
+			}
+		}
+
+		private void SaveButton_Click( object sender, EventArgs e )
+		{
+			if( pictureBox1.Image != null )
+			{
+				using( SaveFileDialog sfd = new SaveFileDialog() )
+				{
+					if( sfd.ShowDialog() == DialogResult.OK )
+					{
+						pictureBox1.Image.Save( sfd.FileName );
+					}
+				}
+			}
+		}
+
+		private void Diagnostics_Click( object sender, EventArgs e )
+		{
+			new Diagnostics( new WinFormsWindowMessageHook( this ) );
+		}
+	}
 }

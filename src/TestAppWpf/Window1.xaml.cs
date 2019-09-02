@@ -14,7 +14,7 @@ namespace TestAppWpf
 {
     public partial class Window1 : Window
     {
-        private static AreaSettings AreaSettings = new AreaSettings(0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
+        private static readonly AreaSettings AreaSettings = new AreaSettings(0.1f, 5.7f, 0.1F + 2.6f, 5.7f + 2.6f);
 
         private Twain _twain;
         private ScanSettings _settings;
@@ -94,7 +94,7 @@ namespace TestAppWpf
             _twain.SelectSource();
         }
 
-        private void scanButton_Click(object sender, RoutedEventArgs e)
+        private void ScanButton_Click(object sender, RoutedEventArgs e)
         {
             IsEnabled = false;
 
@@ -124,7 +124,7 @@ namespace TestAppWpf
 
                 _twain.StartScanning(_settings);
             }
-            catch (TwainException ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }

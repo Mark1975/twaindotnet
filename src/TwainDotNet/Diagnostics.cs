@@ -5,8 +5,15 @@ using TwainDotNet.TwainNative;
 
 namespace TwainDotNet
 {
+	/// <summary>
+	/// Diagnostict.
+	/// </summary>
     public class Diagnostics
     {
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		/// <param name="messageHook">The message hook.</param>
         public Diagnostics(IWindowsMessageHook messageHook)
         {
             using (var dataSourceManager = new DataSourceManager(DataSourceManager.DefaultApplicationId, messageHook))

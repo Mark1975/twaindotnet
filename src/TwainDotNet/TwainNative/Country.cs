@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.CodeDom.Compiler;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Country : short
+	[GeneratedCode( "TwainH", "1.0" )]
+#pragma warning disable 1591
+	public enum Country : short
     {
         USA = 1        
     }
+#pragma warning restore 1591
 }

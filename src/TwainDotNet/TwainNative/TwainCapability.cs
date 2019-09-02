@@ -13,9 +13,9 @@ namespace TwainDotNet.TwainNative
     /// } TW_CAPABILITY, FAR * pTW_CAPABILITY;
     /// </summary>
     [StructLayout( LayoutKind.Sequential, Pack = 2 )]
-    public class TwainCapability : IDisposable
+    internal class TwainCapability : IDisposable
     {
-        Capabilities _capabilities;
+        readonly Capabilities _capabilities;
         ContainerType _containerType;
         IntPtr _handle;
 

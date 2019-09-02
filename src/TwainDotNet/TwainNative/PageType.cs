@@ -1,6 +1,7 @@
 ﻿namespace TwainDotNet.TwainNative
 {
-    public enum PageType : ushort
+#pragma warning disable 1591
+	public enum PageType : ushort
     {
         None = 0,
 
@@ -81,4 +82,5 @@
         BusinessCard = 53,
         MaxSize = 54,
     }
+#pragma warning restore 1591
 }

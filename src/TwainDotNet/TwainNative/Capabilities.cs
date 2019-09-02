@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace TwainDotNet.TwainNative
 {
-    public enum Capabilities : ushort
+    internal enum Capabilities : ushort
     {
         // all data sources are REQUIRED to support these capabilities
         XferCount = 0x0001,
