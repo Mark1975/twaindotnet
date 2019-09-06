@@ -152,7 +152,7 @@ namespace TwainDotNet
 		{
 			get
 			{
-				if( !supportedCapabilities.Contains( Capabilities.Duplex ) )
+				if( supportedCapabilities == null || !supportedCapabilities.Contains( Capabilities.Duplex ) )
 				{
 					return false;
 				}
@@ -176,7 +176,7 @@ namespace TwainDotNet
 				return;
 			}
 
-			if( supportedCapabilities.Contains( Capabilities.IPixelType ) )
+			if( supportedCapabilities != null &&  supportedCapabilities.Contains( Capabilities.IPixelType ) )
 			{
 				try
 				{
@@ -189,7 +189,7 @@ namespace TwainDotNet
 			}
 
 			// TODO: Also set this for colour scanning
-			if( supportedCapabilities.Contains( Capabilities.BitDepth ) )
+			if( supportedCapabilities != null && supportedCapabilities.Contains( Capabilities.BitDepth ) )
 			{
 				try
 				{
@@ -222,7 +222,7 @@ namespace TwainDotNet
 
 		private void NegotiateCapability( Capabilities capabilities, Fix32 fix32 )
 		{
-			if( !supportedCapabilities.Contains( capabilities ) )
+			if( supportedCapabilities == null || !supportedCapabilities.Contains( capabilities ) )
 			{
 				return;
 			}
@@ -256,7 +256,7 @@ namespace TwainDotNet
 
 		private void NegotiateCapability( Capabilities capabilities, bool value )
 		{
-			if( !supportedCapabilities.Contains( capabilities ) )
+			if( supportedCapabilities == null || !supportedCapabilities.Contains( capabilities ) )
 			{
 				return;
 			}
@@ -384,7 +384,7 @@ namespace TwainDotNet
 			bool? result = null;
 			bool success = false;
 
-			if( this.supportedCapabilities.Contains( capabilities ) )
+			if( supportedCapabilities != null && this.supportedCapabilities.Contains( capabilities ) )
 			{
 				try
 				{
@@ -490,21 +490,24 @@ namespace TwainDotNet
 		public void DebugCapabilities()
 		{
 			log.Debug( "Start debugging capabilities." );
-			foreach( Capabilities supportedCapability in supportedCapabilities )
+			if( supportedCapabilities != null )
 			{
-				if( supportedCapability == Capabilities.SupportedCapabilities )
+				foreach( Capabilities supportedCapability in supportedCapabilities )
 				{
-					continue;
-				}
+					if( supportedCapability == Capabilities.SupportedCapabilities )
+					{
+						continue;
+					}
 
-				try
-				{
-					CapabilityResult capabilityResult = Capability.GetCapability( supportedCapability, _applicationId, SourceId );
-					log.DebugFormat( "{0} {1}", supportedCapability, capabilityResult.ToString() );
-				}
-				catch( Exception ex )
-				{
-					log.DebugFormat( "{0} {1}", supportedCapability, ex.Message );
+					try
+					{
+						CapabilityResult capabilityResult = Capability.GetCapability( supportedCapability, _applicationId, SourceId );
+						log.DebugFormat( "{0} {1}", supportedCapability, capabilityResult.ToString() );
+					}
+					catch( Exception ex )
+					{
+						log.DebugFormat( "{0} {1}", supportedCapability, ex.Message );
+					}
 				}
 			}
 			log.Debug( "End debugging capabilities." );
@@ -524,7 +527,7 @@ namespace TwainDotNet
 			T? result = null;
 			T[] options = null;
 			bool success = false;
-			if( supportedCapabilities.Contains( capabilities ) )
+			if( supportedCapabilities != null && supportedCapabilities.Contains( capabilities ) )
 			{
 				try
 				{
@@ -686,7 +689,7 @@ namespace TwainDotNet
 		public bool Enable( ScanSettings settings )
 		{
 			bool uiControllable = false;
-			if( this.supportedCapabilities.Contains( Capabilities.UIControllable ) )
+			if( supportedCapabilities != null && this.supportedCapabilities.Contains( Capabilities.UIControllable ) )
 			{
 				try
 				{
