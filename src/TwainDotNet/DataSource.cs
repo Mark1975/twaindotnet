@@ -432,6 +432,11 @@ namespace TwainDotNet
 		{
 			this.OpenSource();
 
+			if( this.supportedCapabilities == null )
+			{
+				return false;
+			}
+
 			if( settings.AbortWhenNoPaperDetectable && !PaperDetectable )
 				throw new FeederEmptyException();
 
