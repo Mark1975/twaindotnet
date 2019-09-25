@@ -437,6 +437,11 @@ namespace TwainDotNet
 				return false;
 			}
 
+			if( settings.DebugCapabilities )
+			{
+				this.DebugCapabilities();
+			}
+
 			if( settings.AbortWhenNoPaperDetectable && !PaperDetectable )
 				throw new FeederEmptyException();
 

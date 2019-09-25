@@ -69,7 +69,8 @@ namespace TestApp
 				ShowProgressIndicatorUI = showProgressIndicatorUICheckBox.Checked,
 				UseDuplex = useDuplexCheckBox.Checked,
 				Area = !checkBoxArea.Checked ? null : AreaSettings,
-				ShouldTransferAllPages = true
+				ShouldTransferAllPages = true,
+				DebugCapabilities = true,
 			};
 
 			if( blackAndWhiteCheckBox.Checked )

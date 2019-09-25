@@ -121,14 +121,6 @@ namespace TwainDotNet
         }
 
 		/// <summary>
-		/// Debug capabilities.
-		/// </summary>
-        public void DebugCapabilities()
-        {
-            _dataSourceManager.DebugCapabilities();
-        }
-
-		/// <summary>
 		/// Finalizer.
 		/// </summary>
         ~Twain()

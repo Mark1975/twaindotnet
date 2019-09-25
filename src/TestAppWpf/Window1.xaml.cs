@@ -103,7 +103,6 @@ namespace TestAppWpf
                 if (SourceUserSelected.IsChecked == true)
                     _twain.SelectSource(ManualSource.SelectedItem.ToString());
 
-                _twain.DebugCapabilities();
                 //_settings = new ScanSettings { ShouldTransferAllPages = true, ShowTwainUI = true, };
 
                 _settings = new ScanSettings
@@ -119,6 +118,7 @@ namespace TestAppWpf
                     AutomaticRotate = AutoRotateCheckBox.IsChecked ?? false,
                     AutomaticBorderDetection = AutoDetectBorderCheckBox.IsChecked ?? false,
                     DataTransferMode = MemoryTransferMechanism.IsChecked.GetValueOrDefault() ? TransferMechanism.Memory : TransferMechanism.Native,
+					DebugCapabilities = true,
                 };
                 GetResolutionSettings( _settings );
 

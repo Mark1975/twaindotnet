@@ -147,24 +147,6 @@ namespace TwainDotNet
 			return result;
 		}
 
-		public void DebugCapabilities()
-		{
-			int initialState = DataSource.State;
-			try
-			{
-				DataSource.OpenSource();
-
-				DataSource.DebugCapabilities();
-			}
-			finally
-			{
-				if( initialState < DataSource.State )
-				{
-					DataSource.CloseSource();
-				}
-			}
-		}
-
 		/// <summary>
 		/// Filter message.
 		/// </summary>

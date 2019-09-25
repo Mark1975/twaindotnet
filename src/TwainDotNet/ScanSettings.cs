@@ -465,6 +465,27 @@ namespace TwainDotNet
 			}
 		}
 
+		bool _debugCapabilities;
+
+		/// <summary>
+		/// Indicates if the capabilities should be debugged when opening the DataSource.
+		/// </summary>
+		public bool DebugCapabilities
+		{
+			get
+			{
+				return _debugCapabilities;
+			}
+			set
+			{
+				if( value != _debugCapabilities )
+				{
+					_debugCapabilities = value;
+					OnPropertyChanged( nameof( DebugCapabilities ) );
+				}
+			}
+		}
+
 		#region INotifyPropertyChanged Members
 
 		/// <summary>
