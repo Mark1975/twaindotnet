@@ -116,21 +116,25 @@ namespace TwainDotNet
 			throw new NotImplementedException();
 		}
 
-		public short GetBitDepth( ScanSettings scanSettings )
+		public ushort? GetBitDepth( ScanSettings scanSettings, PixelType pixelType )
 		{
-			switch( scanSettings.ColourSetting )
+			switch( pixelType )
 			{
-				case ColourSetting.BlackAndWhite:
+				case PixelType.BlackAndWhite:
 					return 1;
 
-				case ColourSetting.GreyScale:
+				case PixelType.Grey:
+					if( scanSettings.Prefer16bppGraycale )
+					{
+						return 16;
+					}
 					return 8;
 
-				case ColourSetting.Colour:
+				case PixelType.Rgb:
 					return 24;
+				default:
+					return null;
 			}
-
-			throw new NotImplementedException();
 		}
 
 		public bool PaperDetectable
@@ -171,33 +175,36 @@ namespace TwainDotNet
 
 		public void NegotiateColour( ScanSettings scanSettings )
 		{
-			if( scanSettings.ColourSetting == ColourSetting.Default )
+			if( supportedCapabilities != null && supportedCapabilities.Contains( Capabilities.IPixelType ) )
 			{
-				return;
-			}
+				if( scanSettings.ColourSetting != ColourSetting.Default )
+				{
+					try
+					{
+						Capability.SetCapability( Capabilities.IPixelType, ( ushort )GetPixelType( scanSettings ), TwainType.UInt16, _applicationId, SourceId );
+					}
+					catch
+					{
+						// Do nothing if the data source does not support the requested capability
+					}
+				}
 
-			if( supportedCapabilities != null &&  supportedCapabilities.Contains( Capabilities.IPixelType ) )
-			{
-				try
+				if( supportedCapabilities != null && supportedCapabilities.Contains( Capabilities.BitDepth ) )
 				{
-					Capability.SetCapability( Capabilities.IPixelType, ( ushort )GetPixelType( scanSettings ), TwainType.UInt16, _applicationId, SourceId );
-				}
-				catch
-				{
-					// Do nothing if the data source does not support the requested capability
-				}
-			}
-
-			// TODO: Also set this for colour scanning
-			if( supportedCapabilities != null && supportedCapabilities.Contains( Capabilities.BitDepth ) )
-			{
-				try
-				{
-					Capability.SetCapability( Capabilities.BitDepth, GetBitDepth( scanSettings ), TwainType.UInt16, _applicationId, SourceId );
-				}
-				catch
-				{
-					// Do nothing if the data source does not support the requested capability
+					try
+					{
+						BasicCapabilityResult capabilityResult = Capability.GetCapability( Capabilities.IPixelType, Message.GetCurrent, _applicationId, SourceId ) as BasicCapabilityResult;
+						PixelType pixelType = ( PixelType )capabilityResult.UInt16Value;
+						ushort? bitDepth = GetBitDepth( scanSettings, pixelType );
+						if( bitDepth.HasValue )
+						{
+							Capability.SetCapability( Capabilities.BitDepth, bitDepth.Value , TwainType.UInt16, _applicationId, SourceId );
+						}
+					}
+					catch
+					{
+						// Do nothing if the data source does not support the requested capability
+					}
 				}
 			}
 		}
@@ -444,6 +451,11 @@ namespace TwainDotNet
 
 			if( settings.AbortWhenNoPaperDetectable && !PaperDetectable )
 				throw new FeederEmptyException();
+
+			if( settings.Prefer16bppGraycale )
+			{
+				settings.DataTransferMode = TransferMechanism.Memory;
+			}
 
 			// Set whether or not to show progress window
 			NegotiateProgressIndicator( settings );

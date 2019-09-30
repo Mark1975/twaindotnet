@@ -486,6 +486,26 @@ namespace TwainDotNet
 			}
 		}
 
+		bool _prefer16bppGraycale;
+		/// <summary>
+		/// Indicates if the receiving program prefers 16bpp images when retrieving grayscale images.
+		/// </summary>
+		public bool Prefer16bppGraycale
+		{
+			get
+			{
+				return _prefer16bppGraycale;
+			}
+			set
+			{
+				if( value != _prefer16bppGraycale )
+				{
+					_prefer16bppGraycale = value;
+					OnPropertyChanged( nameof( Prefer16bppGraycale ) );
+				}
+			}
+		}
+
 		#region INotifyPropertyChanged Members
 
 		/// <summary>
