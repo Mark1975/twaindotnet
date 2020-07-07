@@ -206,11 +206,14 @@ namespace TwainDotNet
 					catch( Exception e )
 					{
 						exception = e;
+						log.Warn( $"TransferPictures failed with exception: {e.Message}" );
 					}
 
 					if( !DataSource.KeepOpen || exception != null )
 					{
+						log.Debug( "XFerReady: Closing DataSource." );
 						CloseDsAndCompleteScanning( exception );
+						log.Debug( "XFerReady: After closing dataSource." );
 					}
 					break;
 
@@ -219,6 +222,7 @@ namespace TwainDotNet
 				case Message.CloseDSReq:
 					log.Debug( $"Event {_eventMessage.Message} received. Closing DataSource." );
 					CloseDsAndCompleteScanning( null );
+					log.Debug( $"Event {_eventMessage.Message} received. After closing DataSource." );
 					break;
 
 				case Message.DeviceEvent:
@@ -543,8 +547,9 @@ namespace TwainDotNet
 			{
 				ScanningComplete( this, new ScanningCompleteEventArgs( exception ) );
 			}
-			catch
+			catch( Exception ex )
 			{
+				log.Warn( $"ScanningComplete Exception: {ex.Message}" );
 			}
 		}
 
@@ -582,6 +587,8 @@ namespace TwainDotNet
 
 			if( disposing )
 			{
+				log.Debug( $" DataSourceManager.Dispose ApplicationId: {ApplicationId.Id}" );
+
 				DataSource.Dispose();
 
 				IntPtr windowHandle = _messageHook.WindowHandle;

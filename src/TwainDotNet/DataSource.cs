@@ -49,6 +49,11 @@ namespace TwainDotNet
 		{
 			try
 			{
+				if( supportedCapabilities == null || !supportedCapabilities.Contains( Capabilities.XferCount ) )
+				{
+					return;
+				}
+
 				if( scanSettings.TransferCount.HasValue )
 				{
 					scanSettings.TransferCount = ( short )Capability.SetCapability(
@@ -198,7 +203,16 @@ namespace TwainDotNet
 						ushort? bitDepth = GetBitDepth( scanSettings, pixelType );
 						if( bitDepth.HasValue )
 						{
-							Capability.SetCapability( Capabilities.BitDepth, bitDepth.Value , TwainType.UInt16, _applicationId, SourceId );
+							CapabilityResult bitDepthCapabilityResult = Capability.GetCapability( Capabilities.BitDepth, Message.Get, _applicationId, SourceId );
+							if( bitDepthCapabilityResult is EnumCapabilityResult enumCapabilityResult )
+							{
+								if( !enumCapabilityResult.GetUInt16Items().Contains( bitDepth.Value ) )
+								{
+									return;
+								}
+							}
+
+							Capability.SetCapability( Capabilities.BitDepth, bitDepth.Value, TwainType.UInt16, _applicationId, SourceId );
 						}
 					}
 					catch
@@ -451,6 +465,29 @@ namespace TwainDotNet
 
 			if( settings.AbortWhenNoPaperDetectable && !PaperDetectable )
 				throw new FeederEmptyException();
+
+			if( this.supportedCapabilities != null && this.supportedCapabilities.Contains( Capabilities.IPixelType ) && this.supportedCapabilities.Contains( Capabilities.BitDepth ) )
+			{
+				try
+				{
+					BasicCapabilityResult capabilityResult = Capability.GetCapability( Capabilities.IPixelType, Message.GetCurrent, _applicationId, SourceId ) as BasicCapabilityResult;
+					PixelType pixelType = ( PixelType )capabilityResult.UInt16Value;
+					if( pixelType == PixelType.Grey && settings.Prefer16bppGraycale )
+					{
+						CapabilityResult bitDepthCapabilityResult = Capability.GetCapability( Capabilities.BitDepth, Message.Get, _applicationId, SourceId );
+						if( bitDepthCapabilityResult is EnumCapabilityResult enumCapabilityResult )
+						{
+							if( !enumCapabilityResult.GetUInt16Items().Contains( ( ushort )16 ) )
+							{
+								settings.Prefer16bppGraycale = false;
+							}
+						}
+					}
+				}
+				catch( Exception )
+				{
+				}
+			}
 
 			if( settings.Prefer16bppGraycale )
 			{
@@ -757,6 +794,8 @@ namespace TwainDotNet
 					return false;
 				default:
 					ConditionCode conditionCode = DataSourceManager.GetConditionCode( _applicationId, SourceId );
+
+					log.Error( $"EnableDS {SourceId.ProductName} {result} {conditionCode}." );
 					throw new TwainException( $"EnableDS {SourceId.ProductName} {result} {conditionCode}.", result, conditionCode );
 			}
 			return true;
