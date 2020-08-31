@@ -1,32 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 
 namespace TwainDotNet.Wpf
 {
-	public class DebugWindowsMesage
-	{
-		public IntPtr hwnd
-		{
-			get; set;
-		}
-		public int msg
-		{
-			get; set;
-		}
-		public IntPtr wParam
-		{
-			get; set;
-		}
-		public IntPtr lParam
-		{
-			get; set;
-		}
-	}
-
 	/// <summary>
 	/// A windows message hook for WPF applications.
 	/// </summary>
@@ -35,10 +12,6 @@ namespace TwainDotNet.Wpf
 		readonly HwndSource _source;
 		readonly WindowInteropHelper _interopHelper;
 		bool _usingFilter;
-		public static List<DebugWindowsMesage> DebugWindowsMesages
-		{
-			get;
-		} = new List<DebugWindowsMesage>();
 
 		/// <summary>
 		/// Default constructor.
@@ -63,22 +36,7 @@ namespace TwainDotNet.Wpf
 		{
 			if( FilterMessageCallback != null )
 			{
-				DebugWindowsMesage debugWindowsMesage = new DebugWindowsMesage { hwnd = hwnd, msg = msg, wParam = wParam, lParam = lParam };
-				lock( DebugWindowsMesages )
-				{
-					DebugWindowsMesages.Add( debugWindowsMesage );
-				}
-				try
-				{
-					return FilterMessageCallback( hwnd, msg, wParam, lParam, ref handled );
-				}
-				finally
-				{
-					lock( DebugWindowsMesages )
-					{
-						DebugWindowsMesages.Remove( debugWindowsMesage );
-					}
-				}
+				return FilterMessageCallback( hwnd, msg, wParam, lParam, ref handled );
 			}
 
 			return IntPtr.Zero;
