@@ -7,24 +7,48 @@ using System.Windows.Interop;
 
 namespace TwainDotNet.Wpf
 {
-    /// <summary>
-    /// A windows message hook for WPF applications.
-    /// </summary>
-    public class WpfWindowMessageHook : IWindowsMessageHook
-    {
-        readonly HwndSource _source;
-        readonly WindowInteropHelper _interopHelper;
-        bool _usingFilter;
+	public class DebugWindowsMesage
+	{
+		public IntPtr hwnd
+		{
+			get; set;
+		}
+		public int msg
+		{
+			get; set;
+		}
+		public IntPtr wParam
+		{
+			get; set;
+		}
+		public IntPtr lParam
+		{
+			get; set;
+		}
+	}
+
+	/// <summary>
+	/// A windows message hook for WPF applications.
+	/// </summary>
+	public class WpfWindowMessageHook : IWindowsMessageHook
+	{
+		readonly HwndSource _source;
+		readonly WindowInteropHelper _interopHelper;
+		bool _usingFilter;
+		public static List<DebugWindowsMesage> DebugWindowsMesages
+		{
+			get;
+		} = new List<DebugWindowsMesage>();
 
 		/// <summary>
 		/// Default constructor.
 		/// </summary>
 		/// <param name="window">The window.</param>
-        public WpfWindowMessageHook(Window window)
-        {
-            _source = (HwndSource)PresentationSource.FromDependencyObject(window);
-            _interopHelper = new WindowInteropHelper(window);            
-        }
+		public WpfWindowMessageHook( Window window )
+		{
+			_source = ( HwndSource )PresentationSource.FromDependencyObject( window );
+			_interopHelper = new WindowInteropHelper( window );
+		}
 
 		/// <summary>
 		/// Filter message.
@@ -35,49 +59,73 @@ namespace TwainDotNet.Wpf
 		/// <param name="lParam">The lParam.</param>
 		/// <param name="handled">Whether the message is handled.</param>
 		/// <returns></returns>
-		public IntPtr FilterMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            if (FilterMessageCallback != null)
-            {
-                return FilterMessageCallback(hwnd, msg, wParam, lParam, ref handled);
-            }
+		public IntPtr FilterMessage( IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled )
+		{
+			if( FilterMessageCallback != null )
+			{
+				DebugWindowsMesage debugWindowsMesage = new DebugWindowsMesage { hwnd = hwnd, msg = msg, wParam = wParam, lParam = lParam };
+				lock( DebugWindowsMesages )
+				{
+					DebugWindowsMesages.Add( debugWindowsMesage );
+				}
+				try
+				{
+					return FilterMessageCallback( hwnd, msg, wParam, lParam, ref handled );
+				}
+				finally
+				{
+					lock( DebugWindowsMesages )
+					{
+						DebugWindowsMesages.Remove( debugWindowsMesage );
+					}
+				}
+			}
 
-            return IntPtr.Zero;
-        }
+			return IntPtr.Zero;
+		}
 
 		/// <summary>
 		/// Gets or sets whether to use the filter.
 		/// </summary>
-        public bool UseFilter
-        {
-            get
-            {
-                return _usingFilter;
-            }
-            set 
-            {
-                if (!_usingFilter && value == true)
-                {
-                    _source.AddHook(FilterMessage);
-                    _usingFilter = true;
-                }
+		public bool UseFilter
+		{
+			get
+			{
+				return _usingFilter;
+			}
+			set
+			{
+				if( !_usingFilter && value == true )
+				{
+					_source.AddHook( FilterMessage );
+					_usingFilter = true;
+				}
 
-                if (_usingFilter && value == false)
-                {
-                    _source.RemoveHook(FilterMessage);
-                    _usingFilter = false;
-                }
-            }
-        }
+				if( _usingFilter && value == false )
+				{
+					_source.RemoveHook( FilterMessage );
+					_usingFilter = false;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Get or sets the filter message callback.
 		/// </summary>
-        public FilterMessage FilterMessageCallback { get; set; }
+		public FilterMessage FilterMessageCallback
+		{
+			get; set;
+		}
 
 		/// <summary>
 		/// Gets the window handle.
 		/// </summary>
-        public IntPtr WindowHandle { get { return _interopHelper.Handle; } }
-    }
+		public IntPtr WindowHandle
+		{
+			get
+			{
+				return _interopHelper.Handle;
+			}
+		}
+	}
 }
